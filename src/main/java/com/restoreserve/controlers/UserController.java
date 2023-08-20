@@ -7,6 +7,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.Errors;
 import org.springframework.validation.ObjectError;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -66,7 +67,7 @@ public class UserController {
             return ResponseEntity.badRequest().body(dataResponse);
         }
     }
-    @GetMapping("/superadmin/user")
+    @GetMapping("/appadmin/user")
     public ResponseEntity<ResponseData<List<User>>> getAllUser(){
         ResponseData<List<User>> dataResponse=new ResponseData<>(false, null, null);
         try {
@@ -79,5 +80,22 @@ public class UserController {
             return ResponseEntity.badRequest().body(dataResponse);
         }
     }
-
+    @DeleteMapping("/appadmin/user/delete/{id}")
+    public ResponseEntity<?> deleteUserById(@PathVariable Long id){
+        ResponseData<?> dataResponse =new ResponseData<>(false, null, null);
+        try {
+            boolean isExists = userService.isUserExists(id);
+            if(isExists){
+                userService.deleteById(id);
+                dataResponse.setStatus(true);
+                dataResponse.getMessage().add("User Deleted With id:"+id);
+                return ResponseEntity.ok(dataResponse);
+            }
+            dataResponse.getMessage().add("Failed: User Not Found, id:"+id);
+            return ResponseEntity.badRequest().body(dataResponse);
+        } catch (Exception e) {
+            dataResponse.getMessage().add(e.getMessage());
+            return ResponseEntity.badRequest().body(dataResponse);
+        }
+    }
 }
