@@ -1,5 +1,7 @@
 package com.restoreserve.services;
 
+import java.util.List;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -20,7 +22,7 @@ public class UserService {
     public User getUserById(Long id){
         return userRepo.findById(id).get();
     }
-    public Iterable<User> getAllUser(){
+    public List<User> getAllUser(){
         return userRepo.findAll();
     }
     public User update (User user){
