@@ -25,6 +25,9 @@ public class UserService {
     public List<User> getAllUser(){
         return userRepo.findAll();
     }
+    public boolean isUserExists(Long id){
+        return userRepo.existsById(id);
+    }
     public User update (User user){
         return userRepo.save(user);
     }

@@ -27,6 +27,9 @@ public class ReservationService {
     public List<Reservation> getReservationByRestaurantId(Long restaurant_id){
         return reservationRepo.findbyIdRestaurant(restaurant_id);
     }
+    public List<Reservation> getByReservationStatus(String status){
+        return reservationRepo.findByStatusReservation(status);
+    }
     public Reservation update(Reservation reservation){
         return reservationRepo.save(reservation);
     }
