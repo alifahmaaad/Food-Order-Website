@@ -2,7 +2,11 @@ package com.restoreserve.model.entities;
 
 import java.util.Date;
 
+import com.restoreserve.enums.ReservationEnum;
+
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -29,4 +33,6 @@ public class Reservation {
     private Restaurant restaurant;
     private Date reservationDate;
     private Integer numberOfGuest;
+    @Enumerated(EnumType.STRING)
+    private ReservationEnum statusReservation;
 }
