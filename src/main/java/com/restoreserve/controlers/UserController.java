@@ -1,5 +1,7 @@
 package com.restoreserve.controlers;
 
+import java.util.List;
+
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -28,7 +30,7 @@ public class UserController {
     private UserService userService;
     @PostMapping("/register")
     public ResponseEntity<ResponseData<User>> register(@Valid @RequestBody RegisterUserDto userDto,Errors errs){
-        ResponseData<User> dataResponse = new ResponseData<User>(false, null, null);
+        ResponseData<User> dataResponse = new ResponseData<>(false, null, null);
         if(errs.hasErrors()){
             for (ObjectError err : errs.getAllErrors()) {
             dataResponse.getMessage().add(err.getDefaultMessage());
@@ -48,7 +50,7 @@ public class UserController {
     }
     @GetMapping("/user/{id}")
     public ResponseEntity<ResponseData<User>> getUserById(@PathVariable Long id){
-        ResponseData<User> dataResponse=new ResponseData<User>(false, null, null);
+        ResponseData<User> dataResponse=new ResponseData<>(false, null, null);
         try {
             boolean isExists = userService.isUserExists(id);
             if(isExists){
@@ -64,4 +66,18 @@ public class UserController {
             return ResponseEntity.badRequest().body(dataResponse);
         }
     }
+    @GetMapping("/superadmin/user")
+    public ResponseEntity<ResponseData<List<User>>> getAllUser(){
+        ResponseData<List<User>> dataResponse=new ResponseData<>(false, null, null);
+        try {
+            dataResponse.setPayload(userService.getAllUser());
+            dataResponse.getMessage().add("Success get All data user");
+            dataResponse.setStatus(true);
+            return ResponseEntity.ok(dataResponse);
+        } catch (Exception e) {
+            dataResponse.getMessage().add(e.getMessage());
+            return ResponseEntity.badRequest().body(dataResponse);
+        }
+    }
+
 }
