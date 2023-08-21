@@ -42,6 +42,10 @@ public class UserController {
         }
         User dataUser = modelMapper.map(userDto, User.class);
         try {
+            if(userService.isUserExistsWithUsernameOrEmail(userDto.getUsername(), userDto.getEmail())){
+                dataResponse.getMessage().add("Username or Email already taken");
+                return ResponseEntity.badRequest().body(dataResponse);
+            }
             dataResponse.setPayload(userService.create(dataUser));
             dataResponse.setStatus(true);
             dataResponse.getMessage().add("Your Account has been succesfully created or registered");
@@ -69,6 +73,7 @@ public class UserController {
             return ResponseEntity.badRequest().body(dataResponse);
         }
     }
+    // "/appadmin" for role app admin and super admin only
     @GetMapping("/appadmin")
     public ResponseEntity<ResponseData<List<User>>> getAllUser(){
         ResponseData<List<User>> dataResponse=new ResponseData<>(false, null, null);
@@ -83,7 +88,7 @@ public class UserController {
         }
     }
     @PutMapping("/update")
-    public ResponseEntity<ResponseData<User>> updateUser(UpdateUserDto userDto){
+    public ResponseEntity<ResponseData<User>> updateUser(@RequestBody UpdateUserDto userDto){
         ResponseData<User> dataResponse = new ResponseData<>(false, null, null);
         try {
             boolean isExists=userService.isUserExists(userDto.getId());
@@ -101,6 +106,7 @@ public class UserController {
             return ResponseEntity.badRequest().body(dataResponse);
         }
     }
+    // "/appadmin" for role app admin and super admin only
     @DeleteMapping("/appadmin/delete/{id}")
     public ResponseEntity<?> deleteUserById(@PathVariable Long id){
         ResponseData<?> dataResponse =new ResponseData<>(false, null, null);

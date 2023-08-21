@@ -1,5 +1,6 @@
 package com.restoreserve.model.entities;
 
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
@@ -19,7 +20,8 @@ public class Restaurant {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-    private String nama;
+    @Column(unique = true)
+    private String name;
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "id_owner", referencedColumnName = "id")
     private User userOwner;

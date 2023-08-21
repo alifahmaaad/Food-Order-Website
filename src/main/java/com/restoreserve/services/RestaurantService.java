@@ -27,6 +27,9 @@ public class RestaurantService {
     public boolean isRestaurantExists(Long id){
         return restaurantRepo.existsById(id);
     }
+    public boolean isRestaurantExistsByName(String name){
+        return restaurantRepo.existsByName(name);
+    }
     public Restaurant update(Restaurant restaurant){
         return restaurantRepo.save(restaurant);
     }

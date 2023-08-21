@@ -27,6 +27,9 @@ public class MenuService {
     public Menu update(Menu menu){
         return menuRepo.save(menu);
     }
+    public boolean isExist(Long id){
+        return menuRepo.existsById(id);
+    }
     public void delete(Long id){
         menuRepo.deleteById(id);
     }

@@ -11,16 +11,16 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class UpdateUserDto {
     @NotEmpty(message = "Id is Required")
-    public Long id;
+    private Long id;
     @NotEmpty(message = "Fullname is Required")
-    public String fullName;
+    private String fullName;
     @NotEmpty(message = "Username is Required")
-    public String username;
+    private String username;
     @NotEmpty(message = "Email is Required")
     @Email
-    public String email;
+    private String email;
     @NotEmpty(message = "Password is Required")
-    public String password;
+    private String password;
     @NotEmpty(message = "Role is Required")
-    public String role;
+    private String role;
 }
