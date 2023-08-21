@@ -22,7 +22,7 @@ public class MenuService {
         return menuRepo.findById(id).get();
     }
     public List<Menu> getMenuByRestaurantId(Long id_restaurant){
-        return menuRepo.findByIdRestaurant(id_restaurant);
+        return menuRepo.findAllByRestaurantId(id_restaurant);
     }
     public Menu update(Menu menu){
         return menuRepo.save(menu);

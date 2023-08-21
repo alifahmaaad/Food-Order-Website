@@ -12,5 +12,5 @@ public class CreateRestaurantDto {
     @NotEmpty(message = "Restaurant name required")
     private String name;
     @NotEmpty(message = "Id User with restaurant role required")
-    private Long idOwner;
+    private Long Owner;
 }

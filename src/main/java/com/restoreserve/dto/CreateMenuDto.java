@@ -9,7 +9,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class CreateMenuDto {
     @NotEmpty(message = "IdRestaurant is required")
-    private Long idRestaurant;
+    private Long Restaurant;
     @NotEmpty(message = "name is required")
     private String name;
     @NotEmpty(message = "price is required")

@@ -1,5 +1,6 @@
 package com.restoreserve.controlers;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import org.modelmapper.ModelMapper;
@@ -27,7 +28,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 
 
 @RestController
-@RequestMapping("/restaurant")
+@RequestMapping("/api/restaurant")
 public class RestaurantController {
     @Autowired
     private RestaurantService restaurantService;
@@ -37,14 +38,14 @@ public class RestaurantController {
     private ModelMapper modelMapper;
     @PostMapping("/create")
     public ResponseEntity<ResponseData<Restaurant>> create(@Valid @RequestBody CreateRestaurantDto restaurantDto){
-        ResponseData<Restaurant> dataResponse = new ResponseData<>(false, null, null);
+        ResponseData<Restaurant> dataResponse = new ResponseData<>(false, new ArrayList<>(), null);
         try {
             boolean isExist = restaurantService.isRestaurantExistsByName(restaurantDto.getName());
             if(isExist){
                 dataResponse.getMessage().add("Name of restaurant already taken");
                 return ResponseEntity.badRequest().body(dataResponse);
             }
-            User dataUser = userService.getUserById(restaurantDto.getIdOwner());
+            User dataUser = userService.getUserById(restaurantDto.getOwner());
             if(dataUser!=null){
                 Restaurant restaurant = modelMapper.map(restaurantDto, Restaurant.class);
                 restaurant.setUserOwner(dataUser);
@@ -63,7 +64,7 @@ public class RestaurantController {
     // "/customer" for role customer and super admin only
     @GetMapping("/costumer/all")
     public ResponseEntity<ResponseData<List<Restaurant>>> getAllRestaurant() {
-        ResponseData<List<Restaurant>> dataResponse = new ResponseData<>(false, null, null);
+        ResponseData<List<Restaurant>> dataResponse = new ResponseData<>(false, new ArrayList<>(), null);
         try {
             dataResponse.setPayload(restaurantService.getAllRestaurant());
             dataResponse.getMessage().add("success get all data restaurant");
@@ -76,7 +77,7 @@ public class RestaurantController {
     }
     @GetMapping("/{id}")
     public ResponseEntity<ResponseData<Restaurant>> getRestaurantByid(@PathVariable Long id){
-        ResponseData<Restaurant> dataResponse = new ResponseData<>(false, null, null);
+        ResponseData<Restaurant> dataResponse = new ResponseData<>(false, new ArrayList<>(), null);
         try {
             if(restaurantService.isRestaurantExists(id)){
                 dataResponse.setPayload(restaurantService.getRestaurantById(id));
@@ -93,10 +94,12 @@ public class RestaurantController {
     }
     @PutMapping("/update")
     public ResponseEntity<ResponseData<Restaurant>> updateRestaurant(@Valid @RequestBody UpdateRestaurantDto restaurantDto){
-        ResponseData<Restaurant> dataResponse = new ResponseData<>(false, null, null);
+        ResponseData<Restaurant> dataResponse = new ResponseData<>(false, new ArrayList<>(), null);
         try {
             if(restaurantService.isRestaurantExists(restaurantDto.getId())){
                 Restaurant restaurant = modelMapper.map(restaurantDto, Restaurant.class);
+                User dataUser = userService.getUserById(restaurantDto.getOwner());
+                restaurant.setUserOwner(dataUser);
                 dataResponse.setPayload(restaurantService.update(restaurant));
                 dataResponse.getMessage().add("Restaurant has been updated");
                 dataResponse.setStatus(true);
@@ -111,7 +114,7 @@ public class RestaurantController {
     }
     @DeleteMapping("/delete/{id}")
     public ResponseEntity<ResponseData<Restaurant>> delete(@PathVariable Long id){
-        ResponseData<Restaurant> dataResponse = new ResponseData<>(false, null, null);
+        ResponseData<Restaurant> dataResponse = new ResponseData<>(false, new ArrayList<>(), null);
         try {
             if(restaurantService.isRestaurantExists(id)){
                 restaurantService.deleteById(id);

@@ -20,7 +20,7 @@ public class Menu {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "id_restaurant")
+    @JoinColumn(name = "reataurantId")
     private Restaurant restaurant;
     private String name;
     private Long price;

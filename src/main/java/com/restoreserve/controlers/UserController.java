@@ -1,5 +1,6 @@
 package com.restoreserve.controlers;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import org.modelmapper.ModelMapper;
@@ -33,7 +34,7 @@ public class UserController {
     private UserService userService;
     @PostMapping("/register")
     public ResponseEntity<ResponseData<User>> register(@Valid @RequestBody RegisterUserDto userDto,Errors errs){
-        ResponseData<User> dataResponse = new ResponseData<>(false, null, null);
+        ResponseData<User> dataResponse = new ResponseData<>(false, new ArrayList<>(), null);
         if(errs.hasErrors()){
             for (ObjectError err : errs.getAllErrors()) {
             dataResponse.getMessage().add(err.getDefaultMessage());
@@ -57,7 +58,7 @@ public class UserController {
     }
     @GetMapping("/{id}")
     public ResponseEntity<ResponseData<User>> getUserById(@PathVariable Long id){
-        ResponseData<User> dataResponse=new ResponseData<>(false, null, null);
+        ResponseData<User> dataResponse=new ResponseData<User>(false,new ArrayList<>(), null);
         try {
             boolean isExists = userService.isUserExists(id);
             if(isExists){
@@ -76,7 +77,7 @@ public class UserController {
     // "/appadmin" for role app admin and super admin only
     @GetMapping("/appadmin")
     public ResponseEntity<ResponseData<List<User>>> getAllUser(){
-        ResponseData<List<User>> dataResponse=new ResponseData<>(false, null, null);
+        ResponseData<List<User>> dataResponse=new ResponseData<>(false, new ArrayList<>(), null);
         try {
             dataResponse.setPayload(userService.getAllUser());
             dataResponse.getMessage().add("Success get All data user");
@@ -89,7 +90,7 @@ public class UserController {
     }
     @PutMapping("/update")
     public ResponseEntity<ResponseData<User>> updateUser(@RequestBody UpdateUserDto userDto){
-        ResponseData<User> dataResponse = new ResponseData<>(false, null, null);
+        ResponseData<User> dataResponse = new ResponseData<>(false, new ArrayList<>(), null);
         try {
             boolean isExists=userService.isUserExists(userDto.getId());
             if(isExists){
@@ -109,7 +110,7 @@ public class UserController {
     // "/appadmin" for role app admin and super admin only
     @DeleteMapping("/appadmin/delete/{id}")
     public ResponseEntity<?> deleteUserById(@PathVariable Long id){
-        ResponseData<?> dataResponse =new ResponseData<>(false, null, null);
+        ResponseData<?> dataResponse =new ResponseData<>(false, new ArrayList<>(), null);
         try {
             boolean isExists = userService.isUserExists(id);
             if(isExists){
