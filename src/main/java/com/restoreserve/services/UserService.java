@@ -22,6 +22,9 @@ public class UserService {
     public User getUserById(Long id){
         return userRepo.findById(id).get();
     }
+    public boolean isUserExistsWithUsernameOrEmail(String username,String email){
+        return userRepo.existsByUsernameOrEmail(username,email);
+    }
     public List<User> getAllUser(){
         return userRepo.findAll();
     }

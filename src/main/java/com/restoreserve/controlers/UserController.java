@@ -42,6 +42,10 @@ public class UserController {
         }
         User dataUser = modelMapper.map(userDto, User.class);
         try {
+            if(userService.isUserExistsWithUsernameOrEmail(userDto.getUsername(), userDto.getEmail())){
+                dataResponse.getMessage().add("Username or Email already taken");
+                return ResponseEntity.badRequest().body(dataResponse);
+            }
             dataResponse.setPayload(userService.create(dataUser));
             dataResponse.setStatus(true);
             dataResponse.getMessage().add("Your Account has been succesfully created or registered");
