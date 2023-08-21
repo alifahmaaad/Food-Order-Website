@@ -26,10 +26,10 @@ public class Reservation {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "id_user")
+    @JoinColumn(name = "userId")
     private User user;
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "id_restaurant")
+    @JoinColumn(name = "restaurantId")
     private Restaurant restaurant;
     private Date reservationDate;
     private Integer numberOfGuest;

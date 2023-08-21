@@ -9,7 +9,7 @@ import com.restoreserve.model.entities.Reservation;
 
 public interface ReservationRepo extends JpaRepository<Reservation, Long>{
     //derived query JPA
-    List<Reservation> findbyIdUser(Long id_user);
-    List<Reservation> findbyIdRestaurant(Long id_restaurant);
-    List<Reservation> findByStatusReservation(String statusReservation);
+    List<Reservation> findAllByUserId(Long userId);
+    List<Reservation> findAllByRestaurantId(Long restaurantId);
+    List<Reservation> findAllByStatusReservation(String statusReservation);
 }
