@@ -13,10 +13,13 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.restoreserve.dto.CreateRestaurantDto;
 import com.restoreserve.dto.ResponseData;
+import com.restoreserve.dto.UpdateRestaurantDto;
 import com.restoreserve.model.entities.Restaurant;
 import com.restoreserve.model.entities.User;
 import com.restoreserve.services.RestaurantService;
 import com.restoreserve.services.UserService;
+
+import jakarta.validation.Valid;
 
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -33,7 +36,7 @@ public class RestaurantController {
     @Autowired
     private ModelMapper modelMapper;
     @PostMapping("/create")
-    public ResponseEntity<ResponseData<Restaurant>> create(@RequestBody CreateRestaurantDto restaurantDto){
+    public ResponseEntity<ResponseData<Restaurant>> create(@Valid @RequestBody CreateRestaurantDto restaurantDto){
         ResponseData<Restaurant> dataResponse = new ResponseData<>(false, null, null);
         try {
             boolean isExist = restaurantService.isRestaurantExistsByName(restaurantDto.getName());
@@ -42,12 +45,16 @@ public class RestaurantController {
                 return ResponseEntity.badRequest().body(dataResponse);
             }
             User dataUser = userService.getUserById(restaurantDto.getIdOwner());
-            Restaurant restaurant = modelMapper.map(restaurantDto, Restaurant.class);
-            restaurant.setUserOwner(dataUser);
-            dataResponse.setPayload(restaurantService.create(restaurant));
-            dataResponse.setStatus(true);
-            dataResponse.getMessage().add("Success create restaurant");
-            return ResponseEntity.ok().body(dataResponse);
+            if(dataUser!=null){
+                Restaurant restaurant = modelMapper.map(restaurantDto, Restaurant.class);
+                restaurant.setUserOwner(dataUser);
+                dataResponse.setPayload(restaurantService.create(restaurant));
+                dataResponse.setStatus(true);
+                dataResponse.getMessage().add("Success create restaurant");
+                return ResponseEntity.ok().body(dataResponse);
+            }
+            dataResponse.getMessage().add("User with Id owner not found");
+            return ResponseEntity.badRequest().body(dataResponse);
         } catch (Exception e) {
             dataResponse.getMessage().add(e.getMessage());
             return ResponseEntity.badRequest().body(dataResponse);
@@ -85,10 +92,11 @@ public class RestaurantController {
         }
     }
     @PutMapping("/update")
-    public ResponseEntity<ResponseData<Restaurant>> updateRestaurant(@RequestBody Restaurant restaurant){
-        ResponseData<Restaurant> dataResponse= new ResponseData<>(false, null, restaurant);
+    public ResponseEntity<ResponseData<Restaurant>> updateRestaurant(@Valid @RequestBody UpdateRestaurantDto restaurantDto){
+        ResponseData<Restaurant> dataResponse = new ResponseData<>(false, null, null);
         try {
-            if(restaurantService.isRestaurantExists(restaurant.getId())){
+            if(restaurantService.isRestaurantExists(restaurantDto.getId())){
+                Restaurant restaurant = modelMapper.map(restaurantDto, Restaurant.class);
                 dataResponse.setPayload(restaurantService.update(restaurant));
                 dataResponse.getMessage().add("Restaurant has been updated");
                 dataResponse.setStatus(true);
