@@ -1,5 +1,6 @@
 package com.restoreserve.services;
 
+import java.util.Date;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,6 +19,9 @@ public class ReservationService {
     public Reservation create(Reservation reservation){
         return reservationRepo.save(reservation);
     }
+    public List<Reservation> getAllReservation(){
+        return reservationRepo.findAll();
+    }
     public Reservation getReservationById(Long id){
         return reservationRepo.findById(id).get();
     }
@@ -29,6 +33,12 @@ public class ReservationService {
     }
     public List<Reservation> getByReservationStatus(String status){
         return reservationRepo.findAllByStatusReservation(status);
+    }
+    public boolean isExistsByReservationDate(Date date){
+        return reservationRepo.existsByReservationDate(date);
+    }
+    public boolean isExistsByid(Long id){
+        return reservationRepo.existsById(id);
     }
     public Reservation update(Reservation reservation){
         return reservationRepo.save(reservation);

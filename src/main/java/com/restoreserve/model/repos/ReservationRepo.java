@@ -1,5 +1,6 @@
 package com.restoreserve.model.repos;
 
+import java.util.Date;
 import java.util.List;
 
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -12,4 +13,5 @@ public interface ReservationRepo extends JpaRepository<Reservation, Long>{
     List<Reservation> findAllByUserId(Long userId);
     List<Reservation> findAllByRestaurantId(Long restaurantId);
     List<Reservation> findAllByStatusReservation(String statusReservation);
+    boolean existsByReservationDate(Date reservationDate);
 }
