@@ -1,5 +1,6 @@
 package com.restoreserve.controlers;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import org.modelmapper.ModelMapper;
@@ -35,7 +36,7 @@ public class MenuController {
     private ModelMapper modelMapper;
     @PostMapping("/create")
     public ResponseEntity<ResponseData<Menu>> create(@Valid @RequestBody CreateMenuDto menuDto){
-        ResponseData<Menu> dataResponse = new ResponseData<>(false, null, null);
+        ResponseData<Menu> dataResponse = new ResponseData<>(false, new ArrayList<>(), null);
         try {
             Restaurant dataRestaurant = restaurantService.getRestaurantById(menuDto.getRestaurant());
             if(dataRestaurant!=null){
@@ -55,7 +56,7 @@ public class MenuController {
     }
     @GetMapping("/all/{id}")
     public ResponseEntity<ResponseData<List<Menu>>> getAllMenuByIdRestaurant(@PathVariable Long id){
-        ResponseData<List<Menu>> dataResponse = new ResponseData<>(false, null, null);
+        ResponseData<List<Menu>> dataResponse = new ResponseData<>(false, new ArrayList<>(), null);
         try {
             dataResponse.setPayload(menuService.getMenuByRestaurantId(id));
             dataResponse.getMessage().add("success get all menu");
@@ -68,7 +69,7 @@ public class MenuController {
     }
     @GetMapping("/{id}")
     public ResponseEntity<ResponseData<Menu>> getMenuById(@PathVariable Long id){
-        ResponseData<Menu> dataResponse = new ResponseData<>(false, null, null);
+        ResponseData<Menu> dataResponse = new ResponseData<>(false, new ArrayList<>(), null);
         try {
             dataResponse.setPayload(menuService.getMenuById(id));
             dataResponse.getMessage().add("success get menu");
@@ -81,7 +82,7 @@ public class MenuController {
     }
     @PutMapping("/update")
     public ResponseEntity<ResponseData<Menu>> update(@Valid @RequestBody UpdateMenuDto menuDto){
-        ResponseData<Menu> dataResponse = new ResponseData<>(false, null, null);
+        ResponseData<Menu> dataResponse = new ResponseData<>(false, new ArrayList<>(), null);
         try {
             Restaurant dataRestaurant = restaurantService.getRestaurantById(menuDto.getRestaurant());
             if(dataRestaurant!=null){
@@ -101,7 +102,7 @@ public class MenuController {
     }
     @DeleteMapping("/delete/{id}")
     public ResponseEntity<ResponseData<?>> delete(@PathVariable Long id){
-        ResponseData<?> dataResponse= new ResponseData<>(false, null, null);
+        ResponseData<?> dataResponse= new ResponseData<>(false, new ArrayList<>(), null);
         try {
             if(menuService.isExist(id)){
                 menuService.delete(id);
