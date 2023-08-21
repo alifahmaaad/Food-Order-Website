@@ -73,6 +73,7 @@ public class UserController {
             return ResponseEntity.badRequest().body(dataResponse);
         }
     }
+    // "/appadmin" for role app admin and super admin only
     @GetMapping("/appadmin")
     public ResponseEntity<ResponseData<List<User>>> getAllUser(){
         ResponseData<List<User>> dataResponse=new ResponseData<>(false, null, null);
@@ -87,7 +88,7 @@ public class UserController {
         }
     }
     @PutMapping("/update")
-    public ResponseEntity<ResponseData<User>> updateUser(UpdateUserDto userDto){
+    public ResponseEntity<ResponseData<User>> updateUser(@RequestBody UpdateUserDto userDto){
         ResponseData<User> dataResponse = new ResponseData<>(false, null, null);
         try {
             boolean isExists=userService.isUserExists(userDto.getId());
@@ -105,6 +106,7 @@ public class UserController {
             return ResponseEntity.badRequest().body(dataResponse);
         }
     }
+    // "/appadmin" for role app admin and super admin only
     @DeleteMapping("/appadmin/delete/{id}")
     public ResponseEntity<?> deleteUserById(@PathVariable Long id){
         ResponseData<?> dataResponse =new ResponseData<>(false, null, null);
