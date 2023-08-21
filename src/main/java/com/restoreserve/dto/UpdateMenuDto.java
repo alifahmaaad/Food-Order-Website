@@ -11,7 +11,7 @@ public class UpdateMenuDto {
     @NotEmpty(message = "id is Required")
     private Long id;
     @NotEmpty(message = "IdRestaurant is required")
-    private Long idRestaurant;
+    private Long Restaurant;
     @NotEmpty(message = "name is required")
     private String name;
     @NotEmpty(message = "price is required")

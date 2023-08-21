@@ -25,7 +25,7 @@ import com.restoreserve.services.RestaurantService;
 import jakarta.validation.Valid;
 
 @RestController
-@RequestMapping("/menu")
+@RequestMapping("/api/menu")
 public class MenuController {
     @Autowired
     private MenuService menuService;
@@ -37,7 +37,7 @@ public class MenuController {
     public ResponseEntity<ResponseData<Menu>> create(@Valid @RequestBody CreateMenuDto menuDto){
         ResponseData<Menu> dataResponse = new ResponseData<>(false, null, null);
         try {
-            Restaurant dataRestaurant = restaurantService.getRestaurantById(menuDto.getIdRestaurant());
+            Restaurant dataRestaurant = restaurantService.getRestaurantById(menuDto.getRestaurant());
             if(dataRestaurant!=null){
                 Menu menu = modelMapper.map(menuDto, Menu.class);
                 menu.setRestaurant(dataRestaurant);
@@ -83,7 +83,7 @@ public class MenuController {
     public ResponseEntity<ResponseData<Menu>> update(@Valid @RequestBody UpdateMenuDto menuDto){
         ResponseData<Menu> dataResponse = new ResponseData<>(false, null, null);
         try {
-            Restaurant dataRestaurant = restaurantService.getRestaurantById(menuDto.getIdRestaurant());
+            Restaurant dataRestaurant = restaurantService.getRestaurantById(menuDto.getRestaurant());
             if(dataRestaurant!=null){
                 Menu dataMenu = modelMapper.map(menuDto, Menu.class);
                 dataMenu.setRestaurant(dataRestaurant);

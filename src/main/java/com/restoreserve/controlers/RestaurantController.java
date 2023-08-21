@@ -27,7 +27,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 
 
 @RestController
-@RequestMapping("/restaurant")
+@RequestMapping("/api/restaurant")
 public class RestaurantController {
     @Autowired
     private RestaurantService restaurantService;
@@ -44,7 +44,7 @@ public class RestaurantController {
                 dataResponse.getMessage().add("Name of restaurant already taken");
                 return ResponseEntity.badRequest().body(dataResponse);
             }
-            User dataUser = userService.getUserById(restaurantDto.getIdOwner());
+            User dataUser = userService.getUserById(restaurantDto.getOwner());
             if(dataUser!=null){
                 Restaurant restaurant = modelMapper.map(restaurantDto, Restaurant.class);
                 restaurant.setUserOwner(dataUser);
@@ -97,6 +97,8 @@ public class RestaurantController {
         try {
             if(restaurantService.isRestaurantExists(restaurantDto.getId())){
                 Restaurant restaurant = modelMapper.map(restaurantDto, Restaurant.class);
+                User dataUser = userService.getUserById(restaurantDto.getOwner());
+                restaurant.setUserOwner(dataUser);
                 dataResponse.setPayload(restaurantService.update(restaurant));
                 dataResponse.getMessage().add("Restaurant has been updated");
                 dataResponse.setStatus(true);
