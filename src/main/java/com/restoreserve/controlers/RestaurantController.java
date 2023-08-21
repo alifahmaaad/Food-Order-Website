@@ -2,6 +2,7 @@ package com.restoreserve.controlers;
 
 import java.util.List;
 
+import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -10,9 +11,12 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.restoreserve.dto.CreateRestaurantDto;
 import com.restoreserve.dto.ResponseData;
 import com.restoreserve.model.entities.Restaurant;
+import com.restoreserve.model.entities.User;
 import com.restoreserve.services.RestaurantService;
+import com.restoreserve.services.UserService;
 
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -24,15 +28,22 @@ import org.springframework.web.bind.annotation.PathVariable;
 public class RestaurantController {
     @Autowired
     private RestaurantService restaurantService;
+    @Autowired
+    private UserService userService;
+    @Autowired
+    private ModelMapper modelMapper;
     @PostMapping("/create")
-    public ResponseEntity<ResponseData<Restaurant>> create(@RequestBody Restaurant restaurant){
+    public ResponseEntity<ResponseData<Restaurant>> create(@RequestBody CreateRestaurantDto restaurantDto){
         ResponseData<Restaurant> dataResponse = new ResponseData<>(false, null, null);
         try {
-            boolean isExist = restaurantService.isRestaurantExistsByName(restaurant.getName());
+            boolean isExist = restaurantService.isRestaurantExistsByName(restaurantDto.getName());
             if(isExist){
                 dataResponse.getMessage().add("Name of restaurant already taken");
                 return ResponseEntity.badRequest().body(dataResponse);
             }
+            User dataUser = userService.getUserById(restaurantDto.getIdOwner());
+            Restaurant restaurant = modelMapper.map(restaurantDto, Restaurant.class);
+            restaurant.setUserOwner(dataUser);
             dataResponse.setPayload(restaurantService.create(restaurant));
             dataResponse.setStatus(true);
             dataResponse.getMessage().add("Success create restaurant");
