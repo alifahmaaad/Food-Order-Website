@@ -6,6 +6,7 @@ import java.util.List;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -18,10 +19,14 @@ import org.springframework.web.bind.annotation.RestController;
 import com.restoreserve.dto.CreateMenuDto;
 import com.restoreserve.dto.ResponseData;
 import com.restoreserve.dto.UpdateMenuDto;
+import com.restoreserve.enums.RoleEnum;
 import com.restoreserve.model.entities.Menu;
 import com.restoreserve.model.entities.Restaurant;
+import com.restoreserve.model.entities.User;
+import com.restoreserve.security.ImplementUserDetails.CustomUserDetails;
 import com.restoreserve.services.MenuService;
 import com.restoreserve.services.RestaurantService;
+import com.restoreserve.services.UserService;
 
 import jakarta.validation.Valid;
 
@@ -33,19 +38,27 @@ public class MenuController {
     @Autowired
     private RestaurantService restaurantService;
     @Autowired
+    private UserService userService;
+    @Autowired
     private ModelMapper modelMapper;
-    @PostMapping("/create")
-    public ResponseEntity<ResponseData<Menu>> create(@Valid @RequestBody CreateMenuDto menuDto){
+    //restaurant, when id_resto on menu same as id user in auth
+    @PostMapping("/restaurant/create")
+    public ResponseEntity<ResponseData<Menu>> create(@Valid @RequestBody CreateMenuDto menuDto, @AuthenticationPrincipal CustomUserDetails userDetails){
         ResponseData<Menu> dataResponse = new ResponseData<>(false, new ArrayList<>(), null);
         try {
             Restaurant dataRestaurant = restaurantService.getRestaurantById(menuDto.getRestaurant());
             if(dataRestaurant!=null){
-                Menu menu = modelMapper.map(menuDto, Menu.class);
-                menu.setRestaurant(dataRestaurant);
-                dataResponse.setPayload(menuService.create(menu));
-                dataResponse.getMessage().add("Success Add Menu");
-                dataResponse.setStatus(true);
-                return ResponseEntity.ok(dataResponse);
+                 if(isUserAllowedToAccessThisEndpoint(userDetails)||dataRestaurant.getUserOwner().getId().equals(userDetails.getId())){ 
+                     //need to check cause only user it self can update except his role superadmin or appadmin
+                     Menu menu = modelMapper.map(menuDto, Menu.class);
+                     menu.setRestaurant(dataRestaurant);
+                     dataResponse.setPayload(menuService.create(menu));
+                     dataResponse.getMessage().add("Success Add Menu");
+                     dataResponse.setStatus(true);
+                     return ResponseEntity.ok(dataResponse);
+                }
+                dataResponse.getMessage().add("You are not authorized to Create menu in this resataurant");
+                return ResponseEntity.badRequest().body(dataResponse);
             }
             dataResponse.getMessage().add("Restaurant not found");
             return ResponseEntity.badRequest().body(dataResponse);
@@ -54,6 +67,7 @@ public class MenuController {
             return ResponseEntity.badRequest().body(dataResponse);
         }
     }
+    //all
     @GetMapping("/all/{id}")
     public ResponseEntity<ResponseData<List<Menu>>> getAllMenuByIdRestaurant(@PathVariable Long id){
         ResponseData<List<Menu>> dataResponse = new ResponseData<>(false, new ArrayList<>(), null);
@@ -67,6 +81,7 @@ public class MenuController {
             return ResponseEntity.badRequest().body(dataResponse);
         }
     }
+    //all
     @GetMapping("/{id}")
     public ResponseEntity<ResponseData<Menu>> getMenuById(@PathVariable Long id){
         ResponseData<Menu> dataResponse = new ResponseData<>(false, new ArrayList<>(), null);
@@ -80,18 +95,24 @@ public class MenuController {
             return ResponseEntity.badRequest().body(dataResponse);
         }
     }
-    @PutMapping("/update")
-    public ResponseEntity<ResponseData<Menu>> update(@Valid @RequestBody UpdateMenuDto menuDto){
+    //restaurant, when id_resto on menu same as id user in auth
+    @PutMapping("/restaurant/update")
+    public ResponseEntity<ResponseData<Menu>> update(@Valid @RequestBody UpdateMenuDto menuDto, @AuthenticationPrincipal CustomUserDetails userDetails){
         ResponseData<Menu> dataResponse = new ResponseData<>(false, new ArrayList<>(), null);
         try {
             Restaurant dataRestaurant = restaurantService.getRestaurantById(menuDto.getRestaurant());
             if(dataRestaurant!=null){
-                Menu dataMenu = modelMapper.map(menuDto, Menu.class);
-                dataMenu.setRestaurant(dataRestaurant);
-                dataResponse.setPayload(menuService.update(dataMenu));
-                dataResponse.getMessage().add("Success Update Menu");
-                dataResponse.setStatus(true);
-                return ResponseEntity.ok(dataResponse);
+                if(isUserAllowedToAccessThisEndpoint(userDetails)||dataRestaurant.getUserOwner().getId().equals(userDetails.getId())){ 
+                     //need to check cause only user it self can update except his role superadmin or appadmin
+                     Menu dataMenu = modelMapper.map(menuDto, Menu.class);
+                     dataMenu.setRestaurant(dataRestaurant);
+                     dataResponse.setPayload(menuService.update(dataMenu));
+                     dataResponse.getMessage().add("Success Update Menu");
+                     dataResponse.setStatus(true);
+                     return ResponseEntity.ok(dataResponse);
+                }
+                dataResponse.getMessage().add("You are not authorized to Update menu in this resataurant");
+                return ResponseEntity.badRequest().body(dataResponse);
             }
             dataResponse.getMessage().add("Restaurant not found");
             return ResponseEntity.badRequest().body(dataResponse);
@@ -100,15 +121,22 @@ public class MenuController {
             return ResponseEntity.badRequest().body(dataResponse);
         }
     }
-    @DeleteMapping("/delete/{id}")
-    public ResponseEntity<ResponseData<?>> delete(@PathVariable Long id){
+    //restaurant, when id_resto on menu same as id user in auth
+    @DeleteMapping("/restaurant/delete/{id}")
+    public ResponseEntity<ResponseData<?>> delete(@PathVariable Long id, @AuthenticationPrincipal CustomUserDetails userDetails){
         ResponseData<?> dataResponse= new ResponseData<>(false, new ArrayList<>(), null);
         try {
             if(menuService.isExist(id)){
-                menuService.delete(id);
-                dataResponse.setStatus(true);
-                dataResponse.getMessage().add("success delete menu");
-                return ResponseEntity.ok(dataResponse);
+                Restaurant dataRestaurant = restaurantService.getRestaurantById(menuService.getMenuById(id).getRestaurant().getId());
+                if(isUserAllowedToAccessThisEndpoint(userDetails)||dataRestaurant.getUserOwner().getId().equals(userDetails.getId())){ 
+                    //need to check cause only user it self can update except his role superadmin or appadmin
+                    menuService.delete(id);
+                    dataResponse.setStatus(true);
+                    dataResponse.getMessage().add("success delete menu");
+                    return ResponseEntity.ok(dataResponse);
+                }
+                dataResponse.getMessage().add("You are not authorized to delete menu in this resataurant");
+                return ResponseEntity.badRequest().body(dataResponse);
             }
             dataResponse.getMessage().add("Menu with that id not found");
             return ResponseEntity.badRequest().body(dataResponse);
@@ -116,5 +144,10 @@ public class MenuController {
             dataResponse.getMessage().add(e.getMessage());
             return ResponseEntity.badRequest().body(dataResponse);
         }
+    }
+
+    private boolean isUserAllowedToAccessThisEndpoint(CustomUserDetails userDetails) {
+        User userData = userService.findByUsername(userDetails.getUsername());
+        return userData.getRole().equals(RoleEnum.Super_Admin)||userData.getRole().equals(RoleEnum.App_Admin);
     }
 }

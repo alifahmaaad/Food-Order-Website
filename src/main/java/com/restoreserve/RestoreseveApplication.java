@@ -5,6 +5,8 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
 
+import com.restoreserve.utils.jwt.JwtUtil;
+
 @SpringBootApplication
 public class RestoreseveApplication {
 
@@ -16,5 +18,9 @@ public class RestoreseveApplication {
     ModelMapper modelMapper(){
 		return new ModelMapper();
 	}
+	@Bean
+    JwtUtil jwtUtil() {
+        return new JwtUtil();
+    }
 
 }
