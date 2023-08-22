@@ -5,7 +5,9 @@ import java.util.List;
 
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -15,8 +17,10 @@ import org.springframework.web.bind.annotation.RestController;
 import com.restoreserve.dto.CreateRestaurantDto;
 import com.restoreserve.dto.ResponseData;
 import com.restoreserve.dto.UpdateRestaurantDto;
+import com.restoreserve.enums.RoleEnum;
 import com.restoreserve.model.entities.Restaurant;
 import com.restoreserve.model.entities.User;
+import com.restoreserve.security.ImplementUserDetails.CustomUserDetails;
 import com.restoreserve.services.RestaurantService;
 import com.restoreserve.services.UserService;
 
@@ -80,61 +84,85 @@ public class RestaurantController {
     //UserRole adminresto only with his resto only
     //appadmin and superadmin can access for all user and resto
     @GetMapping("/{id}")
-    public ResponseEntity<ResponseData<Restaurant>> getRestaurantByid(@PathVariable Long id){
+    public ResponseEntity<ResponseData<Restaurant>> getRestaurantByid(@PathVariable Long id, @AuthenticationPrincipal CustomUserDetails userDetails){
         ResponseData<Restaurant> dataResponse = new ResponseData<>(false, new ArrayList<>(), null);
-        try {
-            if(restaurantService.isRestaurantExists(id)){
-                dataResponse.setPayload(restaurantService.getRestaurantById(id));
-                dataResponse.getMessage().add("success get data restaurant by id:"+id);
-                dataResponse.setStatus(true);
-                return ResponseEntity.ok(dataResponse);
+         if(isUserAllowedToAccessThisEndpoint(userDetails)||id.equals(userDetails.getId())){ 
+            //need to check cause only user it self can update except his role superadmin or appadmin
+            try {
+                if(restaurantService.isRestaurantExists(id)){
+                    dataResponse.setPayload(restaurantService.getRestaurantById(id));
+                    dataResponse.getMessage().add("success get data restaurant by id:"+id);
+                    dataResponse.setStatus(true);
+                    return ResponseEntity.ok(dataResponse);
+                }
+                dataResponse.getMessage().add("Restaurant with that id not found");
+                return ResponseEntity.badRequest().body(dataResponse);
+            } catch (Exception e) {
+                dataResponse.getMessage().add(e.getMessage());
+                return ResponseEntity.badRequest().body(dataResponse);
             }
-            dataResponse.getMessage().add("Restaurant with that id not found");
-            return ResponseEntity.badRequest().body(dataResponse);
-        } catch (Exception e) {
-            dataResponse.getMessage().add(e.getMessage());
-            return ResponseEntity.badRequest().body(dataResponse);
         }
+        dataResponse.getMessage().add("You are not authorized to Get data this restaurant ");
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(dataResponse);
     }
+
+
     //UserRole adminresto only with his resto only
     //appadmin and superadmin can access for all user and resto
     @PutMapping("/update")
-    public ResponseEntity<ResponseData<Restaurant>> updateRestaurant(@Valid @RequestBody UpdateRestaurantDto restaurantDto){
+    public ResponseEntity<ResponseData<Restaurant>> updateRestaurant(@Valid @RequestBody UpdateRestaurantDto restaurantDto, @AuthenticationPrincipal CustomUserDetails userDetails){
         ResponseData<Restaurant> dataResponse = new ResponseData<>(false, new ArrayList<>(), null);
-        try {
-            if(restaurantService.isRestaurantExists(restaurantDto.getId())){
-                Restaurant restaurant = modelMapper.map(restaurantDto, Restaurant.class);
-                User dataUser = userService.getUserById(restaurantDto.getOwner());
-                restaurant.setUserOwner(dataUser);
-                dataResponse.setPayload(restaurantService.update(restaurant));
-                dataResponse.getMessage().add("Restaurant has been updated");
-                dataResponse.setStatus(true);
-                return ResponseEntity.ok(dataResponse);
-            }
-            dataResponse.getMessage().add("Restaurant with that id not found");
-            return ResponseEntity.badRequest().body(dataResponse);
-        } catch (Exception e) {
+        if(isUserAllowedToAccessThisEndpoint(userDetails)||restaurantDto.getId().equals(userDetails.getId())){ 
+            //need to check cause only user it self can update except his role superadmin or appadmin
+            try {
+                if(restaurantService.isRestaurantExists(restaurantDto.getId())){
+                    Restaurant restaurant = modelMapper.map(restaurantDto, Restaurant.class);
+                    User dataUser = userService.getUserById(restaurantDto.getOwner());
+                    restaurant.setUserOwner(dataUser);
+                    dataResponse.setPayload(restaurantService.update(restaurant));
+                    dataResponse.getMessage().add("Restaurant has been updated");
+                    dataResponse.setStatus(true);
+                    return ResponseEntity.ok(dataResponse);
+                }
+                dataResponse.getMessage().add("Restaurant with that id not found");
+                return ResponseEntity.badRequest().body(dataResponse);
+            } catch (Exception e) {
             dataResponse.getMessage().add(e.getMessage());
             return ResponseEntity.badRequest().body(dataResponse);
+            }
         }
+        dataResponse.getMessage().add("You are not authorized to Update this restaurant");
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(dataResponse);
     }
+
+
     //UserRole adminresto only with his resto only
     //appadmin and superadmin can access for all user and resto
     @DeleteMapping("/delete/{id}")
-    public ResponseEntity<ResponseData<Restaurant>> delete(@PathVariable Long id){
+    public ResponseEntity<ResponseData<Restaurant>> delete(@PathVariable Long id, @AuthenticationPrincipal CustomUserDetails userDetails){
         ResponseData<Restaurant> dataResponse = new ResponseData<>(false, new ArrayList<>(), null);
-        try {
-            if(restaurantService.isRestaurantExists(id)){
-                restaurantService.deleteById(id);
-                dataResponse.getMessage().add("success delete data restaurant by id:"+id);
-                dataResponse.setStatus(true);
-                return ResponseEntity.ok(dataResponse);
+        if(isUserAllowedToAccessThisEndpoint(userDetails)||id.equals(userDetails.getId())){ 
+            //need to check cause only user it self can update except his role superadmin or appadmin
+            try {
+                if(restaurantService.isRestaurantExists(id)){
+                    restaurantService.deleteById(id);
+                    dataResponse.getMessage().add("success delete data restaurant by id:"+id);
+                    dataResponse.setStatus(true);
+                    return ResponseEntity.ok(dataResponse);
+                }
+                dataResponse.getMessage().add("Restaurant with that id not found");
+                return ResponseEntity.badRequest().body(dataResponse);
+            } catch (Exception e) {
+                dataResponse.getMessage().add(e.getMessage());
+                return ResponseEntity.badRequest().body(dataResponse);
             }
-            dataResponse.getMessage().add("Restaurant with that id not found");
-            return ResponseEntity.badRequest().body(dataResponse);
-        } catch (Exception e) {
-            dataResponse.getMessage().add(e.getMessage());
-            return ResponseEntity.badRequest().body(dataResponse);
         }
+        dataResponse.getMessage().add("You are not authorized to delete this restaurant");
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(dataResponse);
+    }
+
+    private boolean isUserAllowedToAccessThisEndpoint(CustomUserDetails userDetails) {
+        User userData = userService.findByUsername(userDetails.getUsername());
+        return userData.getRole().equals(RoleEnum.Super_Admin)||userData.getRole().equals(RoleEnum.App_Admin);
     }
 }
