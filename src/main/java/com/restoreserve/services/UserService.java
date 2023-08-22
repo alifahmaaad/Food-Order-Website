@@ -25,6 +25,9 @@ public class UserService {
     public boolean isUserExistsWithUsernameOrEmail(String username,String email){
         return userRepo.existsByUsernameOrEmail(username,email);
     }
+    public User findByUsername(String username){
+        return userRepo.findByUsername(username);
+    }
     public List<User> getAllUser(){
         return userRepo.findAll();
     }

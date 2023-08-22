@@ -15,12 +15,13 @@ import lombok.Data;
 @Data
 @AllArgsConstructor
 public class CustomUserDetails implements UserDetails {
-
+    private Long id;
     private String username;
     private String password;
     private String role;
     
     public CustomUserDetails(User user) {
+        this.id =user.getId();
         this.username = user.getUsername();
         this.password = user.getPassword();
         this.role = user.getRole().toString();

@@ -5,7 +5,9 @@ import java.util.List;
 
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.validation.Errors;
 import org.springframework.validation.ObjectError;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -20,7 +22,9 @@ import org.springframework.web.bind.annotation.RestController;
 import com.restoreserve.dto.RegisterUserDto;
 import com.restoreserve.dto.ResponseData;
 import com.restoreserve.dto.UpdateUserDto;
+import com.restoreserve.enums.RoleEnum;
 import com.restoreserve.model.entities.User;
+import com.restoreserve.security.ImplementUserDetails.CustomUserDetails;
 import com.restoreserve.services.UserService;
 
 import jakarta.validation.Valid;
@@ -60,22 +64,27 @@ public class UserController {
     //UserSelfOnly
     //SuperAdmin and appadmin can access other user
     @GetMapping("/{id}")
-    public ResponseEntity<ResponseData<User>> getUserById(@PathVariable Long id){
+    public ResponseEntity<ResponseData<User>> getUserById(@PathVariable Long id, @AuthenticationPrincipal CustomUserDetails userDetails){
         ResponseData<User> dataResponse=new ResponseData<User>(false,new ArrayList<>(), null);
-        try {
-            boolean isExists = userService.isUserExists(id);
-            if(isExists){
-                dataResponse.setPayload(userService.getUserById(id));
-                dataResponse.getMessage().add("Success get data user with id :"+id);
-                dataResponse.setStatus(true);
-                return ResponseEntity.ok(dataResponse);
+        if(isUserAllowedToAccessThisEndpoint(userDetails)||id.equals(userDetails.getId())){ 
+            //need to check cause only user it self can update except his role superadmin or appadmin
+            try {
+                boolean isExists = userService.isUserExists(id);
+                if(isExists){
+                    dataResponse.setPayload(userService.getUserById(id));
+                    dataResponse.getMessage().add("Success get data user with id :"+id);
+                    dataResponse.setStatus(true);
+                    return ResponseEntity.ok(dataResponse);
+                }
+                dataResponse.getMessage().add("Failed: Data user with id :"+id+" Not Found");
+                return ResponseEntity.badRequest().body(dataResponse);
+            } catch (Exception e) {
+                dataResponse.getMessage().add(e.getMessage());
+                return ResponseEntity.badRequest().body(dataResponse);
             }
-            dataResponse.getMessage().add("Failed: Data user with id :"+id+" Not Found");
-            return ResponseEntity.badRequest().body(dataResponse);
-        } catch (Exception e) {
-             dataResponse.getMessage().add(e.getMessage());
-            return ResponseEntity.badRequest().body(dataResponse);
         }
+        dataResponse.getMessage().add("You are not authorized to Update this User");
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(dataResponse);
     }
     // "/appadmin" for role app admin and super admin only
     @GetMapping("/appadmin")
@@ -90,31 +99,37 @@ public class UserController {
             dataResponse.getMessage().add(e.getMessage());
             return ResponseEntity.badRequest().body(dataResponse);
         }
+        
     }
     //UserselfOnly
     //SuperAdmin and appadmin can access other user
     @PutMapping("/update")
-    public ResponseEntity<ResponseData<User>> updateUser(@RequestBody UpdateUserDto userDto){
+    public ResponseEntity<ResponseData<User>> updateUser(@RequestBody UpdateUserDto userDto, @AuthenticationPrincipal CustomUserDetails userDetails){
         ResponseData<User> dataResponse = new ResponseData<>(false, new ArrayList<>(), null);
-        try {
-            boolean isExists=userService.isUserExists(userDto.getId());
-            if(isExists){
-                User user = modelMapper.map(userDto, User.class);
-                dataResponse.setPayload(userService.update(user));
-                dataResponse.setStatus(true);
-                dataResponse.getMessage().add("Success Update user with id: "+user.getId());
-                return ResponseEntity.ok(dataResponse);
-            }
+        if(isUserAllowedToAccessThisEndpoint(userDetails)||userDto.getId().equals(userDetails.getId())){ 
+            //need to check cause only user it self can update except his role superadmin or appadmin
+            try {
+                boolean isExists=userService.isUserExists(userDto.getId());
+                if(isExists){
+                    User user = modelMapper.map(userDto, User.class);
+                    dataResponse.setPayload(userService.update(user));
+                    dataResponse.setStatus(true);
+                    dataResponse.getMessage().add("Success Update user with id: "+user.getId());
+                    return ResponseEntity.ok(dataResponse);
+                }
             dataResponse.getMessage().add("User Not Exists id: "+userDto.getId());
-            return ResponseEntity.badRequest().body(dataResponse);
-        } catch (Exception e) {
-            dataResponse.getMessage().add(e.getMessage());
-            return ResponseEntity.badRequest().body(dataResponse);
+            return ResponseEntity.badRequest().body(dataResponse);  
+            } catch (Exception e) {
+                dataResponse.getMessage().add(e.getMessage());
+                return ResponseEntity.badRequest().body(dataResponse);
+            }
         }
+        dataResponse.getMessage().add("You are not authorized to Update this User");
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(dataResponse);
     }
     // "/appadmin" for role app admin and super admin only
     @DeleteMapping("/appadmin/delete/{id}")
-    public ResponseEntity<?> deleteUserById(@PathVariable Long id){
+    public ResponseEntity<?> deleteUserById(@PathVariable Long id, @AuthenticationPrincipal CustomUserDetails userDetails){
         ResponseData<?> dataResponse =new ResponseData<>(false, new ArrayList<>(), null);
         try {
             boolean isExists = userService.isUserExists(id);
@@ -131,4 +146,10 @@ public class UserController {
             return ResponseEntity.badRequest().body(dataResponse);
         }
     }
+    private boolean isUserAllowedToAccessThisEndpoint(CustomUserDetails userDetails) {
+        User userData = userService.findByUsername(userDetails.getUsername());
+        return userData.getRole().equals(RoleEnum.Super_Admin)||userData.getRole().equals(RoleEnum.App_Admin);
+    }
+
+
 }
