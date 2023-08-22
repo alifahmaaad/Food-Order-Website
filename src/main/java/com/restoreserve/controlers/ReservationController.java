@@ -5,7 +5,9 @@ import java.util.List;
 
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -19,7 +21,10 @@ import com.restoreserve.dto.CreateReservationDto;
 import com.restoreserve.dto.ResponseData;
 import com.restoreserve.dto.UpdateReservationDto;
 import com.restoreserve.enums.ReservationEnum;
+import com.restoreserve.enums.RoleEnum;
 import com.restoreserve.model.entities.Reservation;
+import com.restoreserve.model.entities.User;
+import com.restoreserve.security.ImplementUserDetails.CustomUserDetails;
 import com.restoreserve.services.ReservationService;
 import com.restoreserve.services.RestaurantService;
 import com.restoreserve.services.UserService;
@@ -37,7 +42,7 @@ public class ReservationController {
     private UserService userService;
     @Autowired
     private ModelMapper modelMapper;
-    //alluser customer only
+    //customer only
     @PostMapping("/customer/create")
     public ResponseEntity<ResponseData<Reservation>> create(@Valid @RequestBody CreateReservationDto reservationDto){
         ResponseData<Reservation> dataResponse = new ResponseData<>(false, new ArrayList<>(), null);
@@ -91,99 +96,123 @@ public class ReservationController {
             return ResponseEntity.badRequest().body(dataResponse);
         }
     }
-    //Admin restaurant
+    //Admin restaurant, only when auth iduser same with iduser(id_resto) in this reservation
     @GetMapping("/restaurant/{id}")
-    public ResponseEntity<ResponseData<Reservation>> getReservationByIdRestaurant(@PathVariable Long id){
+    public ResponseEntity<ResponseData<Reservation>> getReservationByIdRestaurant(@PathVariable Long id, @AuthenticationPrincipal CustomUserDetails userDetails){
         ResponseData<Reservation> dataResponse = new ResponseData<>(false, new ArrayList<>(), null);
-        try {
-            if(restaurantService.isRestaurantExists(id)){
-                dataResponse.setPayload(reservationService.getReservationById(id));
-                dataResponse.setStatus(true);
-                dataResponse.getMessage().add("Success get all data reservation");
-                return ResponseEntity.ok(dataResponse);
+        
+        if(isUserAllowedToAccessThisEndpoint(userDetails)||id.equals(userDetails.getId())){ 
+            //need to check cause only user it self can update except his role superadmin or appadmin
+            try {
+                if(restaurantService.isRestaurantExists(id)){
+                    dataResponse.setPayload(reservationService.getReservationById(id));
+                    dataResponse.setStatus(true);
+                    dataResponse.getMessage().add("Success get all data reservation");
+                    return ResponseEntity.ok(dataResponse);
+                }
+                dataResponse.getMessage().add("No reservation data with that Restaurant id");
+                return ResponseEntity.badRequest().body(dataResponse);
+            } catch (Exception e) {
+                dataResponse.getMessage().add(e.getMessage());
+                return ResponseEntity.badRequest().body(dataResponse);
             }
-            dataResponse.getMessage().add("No reservation data with that Restaurant id");
-            return ResponseEntity.badRequest().body(dataResponse);
-        } catch (Exception e) {
-            dataResponse.getMessage().add(e.getMessage());
-            return ResponseEntity.badRequest().body(dataResponse);
-        }
+        } 
+        dataResponse.getMessage().add("You are not authorized to access data reservation on this restaurant");
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(dataResponse);
     }
-    //Customer
-    @GetMapping("/user/{id}")
-    public ResponseEntity<ResponseData<Reservation>> getReservationByIdUser(@PathVariable Long id){
+    //Customer, only when auth iduser same with iduser(id_customer) in this reservation
+    @GetMapping("/customer/{id}")
+    public ResponseEntity<ResponseData<Reservation>> getReservationByIdUser(@PathVariable Long id, @AuthenticationPrincipal CustomUserDetails userDetails){
         ResponseData<Reservation> dataResponse = new ResponseData<>(false, new ArrayList<>(), null);
-        try {
-            if(userService.isUserExists(id)){
-                dataResponse.setPayload(reservationService.getReservationById(id));
-                dataResponse.setStatus(true);
-                dataResponse.getMessage().add("Success get all data reservation");
-                return ResponseEntity.ok(dataResponse);
-            }
-            dataResponse.getMessage().add("No reservation data with that User id");
-            return ResponseEntity.badRequest().body(dataResponse);
-        } catch (Exception e) {
-            dataResponse.getMessage().add(e.getMessage());
-            return ResponseEntity.badRequest().body(dataResponse);
+        if(isUserAllowedToAccessThisEndpoint(userDetails)||id.equals(userDetails.getId())){ 
+            //need to check cause only user it self can update except his role superadmin or appadmin
+            try {
+                if(userService.isUserExists(id)){
+                    dataResponse.setPayload(reservationService.getReservationById(id));
+                    dataResponse.setStatus(true);
+                    dataResponse.getMessage().add("Success get all data reservation");
+                    return ResponseEntity.ok(dataResponse);
+                }
+                dataResponse.getMessage().add("No reservation data with that User id");
+                return ResponseEntity.badRequest().body(dataResponse);
+            } catch (Exception e) {
+                dataResponse.getMessage().add(e.getMessage());
+                return ResponseEntity.badRequest().body(dataResponse);
+            } 
         }
+        dataResponse.getMessage().add("You are not authorized to access data reservation");
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(dataResponse);
     }
-    //all
-    @PutMapping("/update")
-    public ResponseEntity<ResponseData<Reservation>> update(@Valid @RequestBody UpdateReservationDto reservationDto){
+    //customer, only when auth iduser same with iduser(id_customer) in this reservation
+    @PutMapping("/customer/update")
+    public ResponseEntity<ResponseData<Reservation>> update(@Valid @RequestBody UpdateReservationDto reservationDto, @AuthenticationPrincipal CustomUserDetails userDetails){
         ResponseData<Reservation> dataResponse = new ResponseData<>(false, new ArrayList<>(), null);
-        try {
-            if(reservationService.isExistsByid(reservationDto.getId())){
-
-                Reservation reservation = modelMapper.map(reservationDto, Reservation.class);
-                reservation.setUser(userService.getUserById(reservationDto.getUser()));
-                reservation.setRestaurant(restaurantService.getRestaurantById(reservationDto.getRestaurant()));
-                reservation.setStatusReservation(ReservationEnum.Pending);
-                dataResponse.setPayload(reservationService.update(reservation));
-                dataResponse.setStatus(true);
-                dataResponse.getMessage().add("Success update reservation, wait for resto to validation");
-                return ResponseEntity.ok(dataResponse);
+        if(isUserAllowedToAccessThisEndpoint(userDetails)||reservationDto.getUser().equals(userDetails.getId())){ 
+            //need to check cause only user it self can update except his role superadmin or appadmin
+            try {
+                if(reservationService.isExistsByid(reservationDto.getId())){    
+                    Reservation reservation = modelMapper.map(reservationDto, Reservation.class);
+                    reservation.setUser(userService.getUserById(reservationDto.getUser()));
+                    reservation.setRestaurant(restaurantService.getRestaurantById(reservationDto.getRestaurant()));
+                    reservation.setStatusReservation(ReservationEnum.Pending);
+                    dataResponse.setPayload(reservationService.update(reservation));
+                    dataResponse.setStatus(true);
+                    dataResponse.getMessage().add("Success update reservation, wait for resto to validation");
+                    return ResponseEntity.ok(dataResponse);
+                }
+                dataResponse.getMessage().add("Reservation Id Not Found");
+                return ResponseEntity.badRequest().body(dataResponse);
+            } catch (Exception e) {
+                dataResponse.getMessage().add(e.getMessage());
+                return ResponseEntity.badRequest().body(dataResponse);
             }
-            dataResponse.getMessage().add("Reservation Id Not Found");
-            return ResponseEntity.badRequest().body(dataResponse);
-        } catch (Exception e) {
-            dataResponse.getMessage().add(e.getMessage());
-            return ResponseEntity.badRequest().body(dataResponse);
-        }
+        } 
+        dataResponse.getMessage().add("You are not authorized to update data reservation");
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(dataResponse);
     }
-    //restoadmin
+    //restoadmin, only when auth iduser same with iduser(id_resto) in this reservation
     @PutMapping("/restaurant/approve/{id}")
-    ResponseEntity<ResponseData<Reservation>> approve(@PathVariable Long id){
+    ResponseEntity<ResponseData<Reservation>> approve(@PathVariable Long id, @AuthenticationPrincipal CustomUserDetails userDetails){
         ResponseData<Reservation> dataResponse = new ResponseData<>(false, new ArrayList<>(), null);
         try {
-            if(reservationService.isExistsByid(id)){
-
+            if(reservationService.isExistsByid(id)){                   
                 Reservation reservation = reservationService.getReservationById(id);
-                reservation.setStatusReservation(ReservationEnum.Approve);
-                dataResponse.setPayload(reservationService.update(reservation));
-                dataResponse.setStatus(true);
-                dataResponse.getMessage().add("Success approve reservation");
-                return ResponseEntity.ok(dataResponse);
+                if(isUserAllowedToAccessThisEndpoint(userDetails)||reservation.getRestaurant().getId().equals(userDetails.getId())){ 
+                    //need to check cause only user it self can update except his role superadmin or appadmin
+                    reservation.setStatusReservation(ReservationEnum.Approve);
+                    dataResponse.setPayload(reservationService.update(reservation));
+                    dataResponse.setStatus(true);
+                    dataResponse.getMessage().add("Success approve reservation");
+                    return ResponseEntity.ok(dataResponse);
+                } 
+                dataResponse.getMessage().add("You are not authorized to update data reservation");
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(dataResponse);
+                }
+                dataResponse.getMessage().add("Reservation Id Not Found");
+                return ResponseEntity.badRequest().body(dataResponse);
+            } catch (Exception e) {
+                dataResponse.getMessage().add(e.getMessage());
+                return ResponseEntity.badRequest().body(dataResponse);
             }
-            dataResponse.getMessage().add("Reservation Id Not Found");
-            return ResponseEntity.badRequest().body(dataResponse);
-        } catch (Exception e) {
-            dataResponse.getMessage().add(e.getMessage());
-            return ResponseEntity.badRequest().body(dataResponse);
-        }
+        
     }
-    //restoadmin
+    //restoadmin, only when auth iduser same with iduser(id_resto) in this reservation
     @PutMapping("/restaurant/decline/{id}")
-    public ResponseEntity<ResponseData<Reservation>> decline(@PathVariable Long id){
+    public ResponseEntity<ResponseData<Reservation>> decline(@PathVariable Long id, @AuthenticationPrincipal CustomUserDetails userDetails){
         ResponseData<Reservation> dataResponse = new ResponseData<>(false, new ArrayList<>(), null);
         try {
             if(reservationService.isExistsByid(id)){
-
                 Reservation reservation = reservationService.getReservationById(id);
-                reservation.setStatusReservation(ReservationEnum.Decline);
-                dataResponse.setPayload(reservationService.update(reservation));
-                dataResponse.setStatus(true);
-                dataResponse.getMessage().add("Success approve reservation");
-                return ResponseEntity.ok(dataResponse);
+                if(isUserAllowedToAccessThisEndpoint(userDetails)||reservation.getRestaurant().getId().equals(userDetails.getId())){ 
+                    //need to check cause only user it self can update except his role superadmin or appadmin
+                    reservation.setStatusReservation(ReservationEnum.Decline);
+                    dataResponse.setPayload(reservationService.update(reservation));
+                    dataResponse.setStatus(true);
+                    dataResponse.getMessage().add("Success approve reservation");
+                    return ResponseEntity.ok(dataResponse);
+                } 
+                dataResponse.getMessage().add("You are not authorized to update data reservation");
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(dataResponse);
             }
             dataResponse.getMessage().add("Reservation Id Not Found");
             return ResponseEntity.badRequest().body(dataResponse);
@@ -192,16 +221,22 @@ public class ReservationController {
             return ResponseEntity.badRequest().body(dataResponse);
         }
     }
-    //all 
+    //only when iduser same with auth iduser, either customer or restoadmin role
     @DeleteMapping("/{id}")
-    public ResponseEntity<ResponseData<Reservation>> delete(@PathVariable Long id){
+    public ResponseEntity<ResponseData<Reservation>> delete(@PathVariable Long id, @AuthenticationPrincipal CustomUserDetails userDetails){
         ResponseData<Reservation> dataResponse = new ResponseData<>(false, new ArrayList<>(), null);
         try {
             if(reservationService.isExistsByid(id)){
-               reservationService.deleteById(id);;
-                dataResponse.setStatus(true);
-                dataResponse.getMessage().add("Success delete reservation");
-                return ResponseEntity.ok(dataResponse);
+                Reservation reservation = reservationService.getReservationById(id);
+                if(isUserAllowedToAccessThisEndpoint(userDetails)||reservation.getRestaurant().getId().equals(userDetails.getId())){ 
+                    //need to check cause only user it self can update except his role superadmin or appadmin
+                    reservationService.deleteById(id);;
+                    dataResponse.setStatus(true);
+                    dataResponse.getMessage().add("Success delete reservation");
+                    return ResponseEntity.ok(dataResponse);
+                } 
+                dataResponse.getMessage().add("You are not authorized to update data reservation");
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(dataResponse);
             }
             dataResponse.getMessage().add("Reservation Id Not Found");
             return ResponseEntity.badRequest().body(dataResponse);
@@ -209,5 +244,10 @@ public class ReservationController {
             dataResponse.getMessage().add(e.getMessage());
             return ResponseEntity.badRequest().body(dataResponse);
         }
+    }
+
+    private boolean isUserAllowedToAccessThisEndpoint(CustomUserDetails userDetails) {
+        User userData = userService.findByUsername(userDetails.getUsername());
+        return userData.getRole().equals(RoleEnum.Super_Admin)||userData.getRole().equals(RoleEnum.App_Admin);
     }
 }

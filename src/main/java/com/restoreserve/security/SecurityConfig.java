@@ -42,7 +42,7 @@ public class SecurityConfig {
             .hasAnyRole(RoleEnum.Restaurant_Admin.toString(),RoleEnum.App_Admin.toString(),RoleEnum.Super_Admin.toString())
         .requestMatchers("/api/reservation/appadmin/**")
             .hasAnyRole(RoleEnum.App_Admin.toString(),RoleEnum.Super_Admin.toString())
-        .requestMatchers("/api/reservation/customer/create")
+        .requestMatchers("/api/reservation/customer/**")
             .hasAnyRole(RoleEnum.Customer.toString(),RoleEnum.App_Admin.toString(),RoleEnum.Super_Admin.toString())
         .requestMatchers("/api/menu/restaurant/**")
             .hasAnyRole(RoleEnum.Restaurant_Admin.toString(),RoleEnum.App_Admin.toString(),RoleEnum.Super_Admin.toString())
