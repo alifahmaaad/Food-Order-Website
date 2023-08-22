@@ -7,7 +7,11 @@ import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.validation.Errors;
 import org.springframework.validation.ObjectError;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -19,13 +23,17 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.restoreserve.dto.LoginRequest;
+import com.restoreserve.dto.LoginResponse;
 import com.restoreserve.dto.RegisterUserDto;
 import com.restoreserve.dto.ResponseData;
 import com.restoreserve.dto.UpdateUserDto;
 import com.restoreserve.enums.RoleEnum;
 import com.restoreserve.model.entities.User;
 import com.restoreserve.security.ImplementUserDetails.CustomUserDetails;
+import com.restoreserve.security.ImplementUserDetails.CustomUserDetailsService;
 import com.restoreserve.services.UserService;
+import com.restoreserve.utils.jwt.JwtUtil;
 
 import jakarta.validation.Valid;
 
@@ -36,6 +44,38 @@ public class UserController {
     private ModelMapper modelMapper;
     @Autowired
     private UserService userService;
+    @Autowired
+    private CustomUserDetailsService customUserDetailsService;
+    @Autowired
+    private AuthenticationManager authenticationManager;
+    @Autowired
+    private JwtUtil jwtUtil;
+    @PostMapping("/login")
+    public ResponseEntity<ResponseData<LoginResponse>> login(@Valid @RequestBody LoginRequest loginRequest){
+        ResponseData<LoginResponse> dataResponse = new ResponseData<>(false, new ArrayList<>(), null);
+        try {
+            authenticationManager.authenticate(
+                    new UsernamePasswordAuthenticationToken(loginRequest.getUsername(), loginRequest.getPassword())
+            );
+        } catch (BadCredentialsException e) {
+            dataResponse.getMessage().add(e.getMessage());
+            dataResponse.getMessage().add("Invalid username or password");
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(dataResponse);
+        }
+
+        UserDetails userDetails = customUserDetailsService.loadUserByUsername(loginRequest.getUsername());
+        String token = jwtUtil.generateToken(userDetails);
+        LoginResponse response = new LoginResponse(userService.findByUsername(userDetails.getUsername()), token);
+        dataResponse.setStatus(true);
+        dataResponse.setPayload(response);
+        dataResponse.getMessage().add("Login Succesfully");
+        return ResponseEntity.ok(dataResponse);
+    }
+    
+    @GetMapping("/logout")
+    public ResponseEntity<?> logout(){  
+        return ResponseEntity.ok("Logout Successfully");
+    }
     //Allrole
     @PostMapping("/register")
     public ResponseEntity<ResponseData<User>> register(@Valid @RequestBody RegisterUserDto userDto,Errors errs){
