@@ -34,7 +34,8 @@ public class MenuController {
     private RestaurantService restaurantService;
     @Autowired
     private ModelMapper modelMapper;
-    @PostMapping("/create")
+    //restaurant
+    @PostMapping("/restaurant/create")
     public ResponseEntity<ResponseData<Menu>> create(@Valid @RequestBody CreateMenuDto menuDto){
         ResponseData<Menu> dataResponse = new ResponseData<>(false, new ArrayList<>(), null);
         try {
@@ -54,6 +55,7 @@ public class MenuController {
             return ResponseEntity.badRequest().body(dataResponse);
         }
     }
+    //all
     @GetMapping("/all/{id}")
     public ResponseEntity<ResponseData<List<Menu>>> getAllMenuByIdRestaurant(@PathVariable Long id){
         ResponseData<List<Menu>> dataResponse = new ResponseData<>(false, new ArrayList<>(), null);
@@ -67,6 +69,7 @@ public class MenuController {
             return ResponseEntity.badRequest().body(dataResponse);
         }
     }
+    //all
     @GetMapping("/{id}")
     public ResponseEntity<ResponseData<Menu>> getMenuById(@PathVariable Long id){
         ResponseData<Menu> dataResponse = new ResponseData<>(false, new ArrayList<>(), null);
@@ -80,7 +83,8 @@ public class MenuController {
             return ResponseEntity.badRequest().body(dataResponse);
         }
     }
-    @PutMapping("/update")
+    //restaurant
+    @PutMapping("/restaurant/update")
     public ResponseEntity<ResponseData<Menu>> update(@Valid @RequestBody UpdateMenuDto menuDto){
         ResponseData<Menu> dataResponse = new ResponseData<>(false, new ArrayList<>(), null);
         try {
@@ -100,7 +104,8 @@ public class MenuController {
             return ResponseEntity.badRequest().body(dataResponse);
         }
     }
-    @DeleteMapping("/delete/{id}")
+    //restaurant
+    @DeleteMapping("/restaurant/delete/{id}")
     public ResponseEntity<ResponseData<?>> delete(@PathVariable Long id){
         ResponseData<?> dataResponse= new ResponseData<>(false, new ArrayList<>(), null);
         try {

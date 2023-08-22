@@ -36,6 +36,8 @@ public class RestaurantController {
     private UserService userService;
     @Autowired
     private ModelMapper modelMapper;
+    //UserRole adminresto only with his resto only
+    //appadmin and superadmin can access for all user and resto
     @PostMapping("/create")
     public ResponseEntity<ResponseData<Restaurant>> create(@Valid @RequestBody CreateRestaurantDto restaurantDto){
         ResponseData<Restaurant> dataResponse = new ResponseData<>(false, new ArrayList<>(), null);
@@ -75,6 +77,8 @@ public class RestaurantController {
             return ResponseEntity.badRequest().body(dataResponse);
         }
     }
+    //UserRole adminresto only with his resto only
+    //appadmin and superadmin can access for all user and resto
     @GetMapping("/{id}")
     public ResponseEntity<ResponseData<Restaurant>> getRestaurantByid(@PathVariable Long id){
         ResponseData<Restaurant> dataResponse = new ResponseData<>(false, new ArrayList<>(), null);
@@ -92,6 +96,8 @@ public class RestaurantController {
             return ResponseEntity.badRequest().body(dataResponse);
         }
     }
+    //UserRole adminresto only with his resto only
+    //appadmin and superadmin can access for all user and resto
     @PutMapping("/update")
     public ResponseEntity<ResponseData<Restaurant>> updateRestaurant(@Valid @RequestBody UpdateRestaurantDto restaurantDto){
         ResponseData<Restaurant> dataResponse = new ResponseData<>(false, new ArrayList<>(), null);
@@ -112,6 +118,8 @@ public class RestaurantController {
             return ResponseEntity.badRequest().body(dataResponse);
         }
     }
+    //UserRole adminresto only with his resto only
+    //appadmin and superadmin can access for all user and resto
     @DeleteMapping("/delete/{id}")
     public ResponseEntity<ResponseData<Restaurant>> delete(@PathVariable Long id){
         ResponseData<Restaurant> dataResponse = new ResponseData<>(false, new ArrayList<>(), null);

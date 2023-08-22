@@ -32,6 +32,7 @@ public class UserController {
     private ModelMapper modelMapper;
     @Autowired
     private UserService userService;
+    //Allrole
     @PostMapping("/register")
     public ResponseEntity<ResponseData<User>> register(@Valid @RequestBody RegisterUserDto userDto,Errors errs){
         ResponseData<User> dataResponse = new ResponseData<>(false, new ArrayList<>(), null);
@@ -56,6 +57,8 @@ public class UserController {
             return ResponseEntity.badRequest().body(dataResponse);
         }
     }
+    //UserSelfOnly
+    //SuperAdmin and appadmin can access other user
     @GetMapping("/{id}")
     public ResponseEntity<ResponseData<User>> getUserById(@PathVariable Long id){
         ResponseData<User> dataResponse=new ResponseData<User>(false,new ArrayList<>(), null);
@@ -88,6 +91,8 @@ public class UserController {
             return ResponseEntity.badRequest().body(dataResponse);
         }
     }
+    //UserselfOnly
+    //SuperAdmin and appadmin can access other user
     @PutMapping("/update")
     public ResponseEntity<ResponseData<User>> updateUser(@RequestBody UpdateUserDto userDto){
         ResponseData<User> dataResponse = new ResponseData<>(false, new ArrayList<>(), null);

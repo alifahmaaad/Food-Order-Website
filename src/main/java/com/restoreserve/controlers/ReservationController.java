@@ -37,7 +37,8 @@ public class ReservationController {
     private UserService userService;
     @Autowired
     private ModelMapper modelMapper;
-    @PostMapping("/create")
+    //alluser customer only
+    @PostMapping("/customer/create")
     public ResponseEntity<ResponseData<Reservation>> create(@Valid @RequestBody CreateReservationDto reservationDto){
         ResponseData<Reservation> dataResponse = new ResponseData<>(false, new ArrayList<>(), null);
         try {
@@ -72,6 +73,7 @@ public class ReservationController {
             return ResponseEntity.badRequest().body(dataResponse);
         }
     }
+    //all
     @GetMapping("/{id}")
     public ResponseEntity<ResponseData<Reservation>> getReservationById(@PathVariable Long id){
         ResponseData<Reservation> dataResponse = new ResponseData<>(false, new ArrayList<>(), null);
@@ -79,7 +81,7 @@ public class ReservationController {
             if(reservationService.isExistsByid(id)){
                 dataResponse.setPayload(reservationService.getReservationById(id));
                 dataResponse.setStatus(true);
-                dataResponse.getMessage().add("Success get all data reservation");
+                dataResponse.getMessage().add("Success get data reservation");
                 return ResponseEntity.ok(dataResponse);
             }
             dataResponse.getMessage().add("No reservation data with that id");
@@ -125,6 +127,7 @@ public class ReservationController {
             return ResponseEntity.badRequest().body(dataResponse);
         }
     }
+    //all
     @PutMapping("/update")
     public ResponseEntity<ResponseData<Reservation>> update(@Valid @RequestBody UpdateReservationDto reservationDto){
         ResponseData<Reservation> dataResponse = new ResponseData<>(false, new ArrayList<>(), null);
@@ -147,6 +150,7 @@ public class ReservationController {
             return ResponseEntity.badRequest().body(dataResponse);
         }
     }
+    //restoadmin
     @PutMapping("/restaurant/approve/{id}")
     ResponseEntity<ResponseData<Reservation>> approve(@PathVariable Long id){
         ResponseData<Reservation> dataResponse = new ResponseData<>(false, new ArrayList<>(), null);
@@ -167,6 +171,7 @@ public class ReservationController {
             return ResponseEntity.badRequest().body(dataResponse);
         }
     }
+    //restoadmin
     @PutMapping("/restaurant/decline/{id}")
     public ResponseEntity<ResponseData<Reservation>> decline(@PathVariable Long id){
         ResponseData<Reservation> dataResponse = new ResponseData<>(false, new ArrayList<>(), null);
@@ -187,6 +192,7 @@ public class ReservationController {
             return ResponseEntity.badRequest().body(dataResponse);
         }
     }
+    //all 
     @DeleteMapping("/{id}")
     public ResponseEntity<ResponseData<Reservation>> delete(@PathVariable Long id){
         ResponseData<Reservation> dataResponse = new ResponseData<>(false, new ArrayList<>(), null);
