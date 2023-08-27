@@ -1,7 +1,8 @@
 package com.restoreserve.security.ImplementUserDetails;
 
 import java.util.Collection;
-import java.util.Collections;
+import java.util.HashSet;
+import java.util.Set;
 
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -19,16 +20,19 @@ public class CustomUserDetails implements UserDetails {
     private String username;
     private String password;
     private String role;
+    private Set<GrantedAuthority> authorities = new HashSet<>();
     
-    public CustomUserDetails(User user) {
-        this.id =user.getId();
+   public CustomUserDetails(User user , String encodedPassword) {
+    // System.out.print(user);
+        this.id = user.getId();
         this.username = user.getUsername();
         this.password = user.getPassword();
-        this.role = user.getRole().toString();
+        String role = "ROLE_" + user.getRole().toString();
+        this.authorities.add(new SimpleGrantedAuthority(role));
     }
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        return Collections.singleton(new SimpleGrantedAuthority(role));
+        return authorities;
     }
 
     @Override

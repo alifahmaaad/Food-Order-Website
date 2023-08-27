@@ -12,6 +12,7 @@ import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.validation.Errors;
 import org.springframework.validation.ObjectError;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -35,9 +36,13 @@ import com.restoreserve.security.ImplementUserDetails.CustomUserDetailsService;
 import com.restoreserve.services.UserService;
 import com.restoreserve.utils.jwt.JwtUtil;
 
+import io.swagger.v3.oas.annotations.OpenAPIDefinition;
+import io.swagger.v3.oas.annotations.info.Info;
+import io.swagger.v3.oas.annotations.info.License;
 import jakarta.validation.Valid;
 
 @RestController
+@OpenAPIDefinition(info = @Info(title = "My App", description = "Some long and useful description", version = "v1", license = @License(name = "Apache 2.0", url = "https://www.apache.org/licenses/LICENSE-2.0")))
 @RequestMapping("/api/user")
 public class UserController {
     @Autowired
@@ -48,6 +53,8 @@ public class UserController {
     private CustomUserDetailsService customUserDetailsService;
     @Autowired
     private AuthenticationManager authenticationManager;
+     @Autowired
+    private PasswordEncoder passwordEncoder;
     @Autowired
     private JwtUtil jwtUtil;
     @PostMapping("/login")
@@ -87,6 +94,8 @@ public class UserController {
             return ResponseEntity.badRequest().body(dataResponse);
         }
         User dataUser = modelMapper.map(userDto, User.class);
+        String encodedPassword = passwordEncoder.encode(dataUser.getPassword());
+        dataUser.setPassword(encodedPassword);
         try {
             if(userService.isUserExistsWithUsernameOrEmail(userDto.getUsername(), userDto.getEmail())){
                 dataResponse.getMessage().add("Username or Email already taken");
