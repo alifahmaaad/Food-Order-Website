@@ -6,6 +6,9 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.annotation.web.configuration.WebSecurityCustomizer;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
@@ -25,6 +28,10 @@ public class SecurityConfig {
         return config.getAuthenticationManager();
     }
     @Bean
+    PasswordEncoder passwordEncoder() {
+        return new BCryptPasswordEncoder();
+    }
+    @Bean
     SecurityFilterChain filterChain(HttpSecurity http) throws Exception{
         http.csrf(csrf -> csrf.disable())
         .authorizeHttpRequests(authz->authz
@@ -32,7 +39,7 @@ public class SecurityConfig {
             .permitAll()
         .requestMatchers("/api/user/logout")
             .permitAll()
-        .requestMatchers("/swagger-ui")
+        .requestMatchers("/api/user/register")
             .permitAll()
         .requestMatchers("/api/user/appadmin/**")
             .hasAnyRole(RoleEnum.App_Admin.toString(),RoleEnum.Super_Admin.toString())
@@ -51,4 +58,16 @@ public class SecurityConfig {
         .addFilterBefore(jwtAuthenticationFilter(), UsernamePasswordAuthenticationFilter.class);
         return http.build();
     }
+    @Bean
+    WebSecurityCustomizer webSecurityCustomizer() {
+        return (web) -> web.ignoring()
+        .requestMatchers("/api/auth/**")
+        .requestMatchers("/v3/api-docs/**")
+        .requestMatchers("configuration/**")
+        .requestMatchers("/swagger*/**")
+        .requestMatchers("/webjars/**")
+        .requestMatchers("/swagger-ui/**")
+        .requestMatchers("/secure/**");
+    }
+    
 }
