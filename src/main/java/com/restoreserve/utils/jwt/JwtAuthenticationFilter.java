@@ -3,9 +3,7 @@ package com.restoreserve.utils.jwt;
 import java.io.IOException;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.filter.OncePerRequestFilter;
@@ -23,8 +21,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter{
     private JwtUtil jwtUtil;
      @Autowired
     private CustomUserDetailsService customUserDetailsService;
-    @Autowired
-     private AuthenticationManager authenticationManager;
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response,FilterChain filterChain) throws ServletException, IOException {
         final String authorizationHeader = request.getHeader("Authorization");
@@ -44,18 +40,17 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter{
         }
         if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
             UserDetails userDetails = customUserDetailsService.loadUserByUsername(username);
-
+            
             if (jwtUtil.validateToken(jwt)) {
                 try {
-                    UsernamePasswordAuthenticationToken authenticationToken = new UsernamePasswordAuthenticationToken(
-                        userDetails, null, userDetails.getAuthorities());
-
-                Authentication authentication = authenticationManager.authenticate(authenticationToken);
-                SecurityContextHolder.getContext().setAuthentication(authentication);
-                } catch (Exception e) {
-                    response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-                    response.getWriter().write("Authentication failed: " + e.getMessage());
-                return;
+                        UsernamePasswordAuthenticationToken authenticationToken =
+                        new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
+                        SecurityContextHolder.getContext().setAuthentication(authenticationToken);
+                    } catch (Exception e) {
+                        System.out.println("garisss keraassss");
+                        response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                        response.getWriter().write("Authentication failed: " + e.getMessage());
+                        return;
                 }
 
             }
