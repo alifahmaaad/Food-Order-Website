@@ -22,6 +22,6 @@ public class ImageService {
         Path imagePath = Paths.get(destinationPath, uniqueFileName);
         System.out.println(imagePath.toString());
         Files.copy(image.getInputStream(), imagePath, StandardCopyOption.REPLACE_EXISTING);
-        return imagePath.toString();
+        return "uploads/" + uploadPath + "/" + uniqueFileName;
     }
 }
