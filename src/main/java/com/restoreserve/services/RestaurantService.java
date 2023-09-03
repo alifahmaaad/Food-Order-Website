@@ -24,6 +24,9 @@ public class RestaurantService {
     public Restaurant getRestaurantById(Long id){
         return restaurantRepo.findById(id).get();
     }
+    public Restaurant getRestaurantByOwner(Long id){
+        return restaurantRepo.findByUserOwnerId(id);
+    }
     public boolean isRestaurantExists(Long id){
         return restaurantRepo.existsById(id);
     }

@@ -1,4 +1,6 @@
 package com.restoreserve.dto;
+import org.springframework.web.multipart.MultipartFile;
+
 import jakarta.validation.constraints.NotEmpty;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -16,5 +18,6 @@ public class UpdateMenuDto {
     private String name;
     @NotEmpty(message = "price is required")
     private Long price;
-    private String Description;
+    private String description;
+    private MultipartFile photo;
 }

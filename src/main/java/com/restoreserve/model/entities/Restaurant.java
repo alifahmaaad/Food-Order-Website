@@ -22,7 +22,10 @@ public class Restaurant {
     private Long id;
     @Column(unique = true)
     private String name;
+    private String photo;
+    private String address;
+    private String location;
     @OneToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "id_owner", referencedColumnName = "id")
+    @JoinColumn(name = "ownerId", referencedColumnName = "id")
     private User userOwner;
 }
