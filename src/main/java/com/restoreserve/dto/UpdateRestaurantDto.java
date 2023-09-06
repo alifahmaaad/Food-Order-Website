@@ -17,4 +17,6 @@ public class UpdateRestaurantDto {
     private Long owner;
     private String tags;
     private MultipartFile photo;
+    private String address;
+    private String location;
 }
