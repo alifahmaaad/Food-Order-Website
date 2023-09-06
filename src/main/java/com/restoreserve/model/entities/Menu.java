@@ -24,5 +24,6 @@ public class Menu {
     private Restaurant restaurant;
     private String name;
     private Long price;
-    private String Description;
+    private String description;
+    private String photo;
 }

@@ -1,5 +1,7 @@
 package com.restoreserve.dto;
 
+import org.springframework.web.multipart.MultipartFile;
+
 import jakarta.validation.constraints.NotEmpty;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -12,5 +14,9 @@ public class UpdateRestaurantDto {
     @NotEmpty(message = "Restaurant name required")
     private String name;
     @NotEmpty(message = "Id User with restaurant role required")
-    private Long Owner;
+    private Long owner;
+    private String tags;
+    private MultipartFile photo;
+    private String address;
+    private String location;
 }
