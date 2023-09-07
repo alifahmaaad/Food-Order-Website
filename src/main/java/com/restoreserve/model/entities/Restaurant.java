@@ -24,6 +24,7 @@ public class Restaurant {
     private String name;
     private String photo;
     private String address;
+    private String tags;
     private String location;
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "ownerId", referencedColumnName = "id")
