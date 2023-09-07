@@ -10,7 +10,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -47,32 +46,39 @@ public class RestaurantController {
     // UserRole adminresto only with his resto only
     // appadmin and superadmin can access for all user and resto
     @PostMapping("/create")
-    public ResponseEntity<ResponseData<Restaurant>> create(@Valid @ModelAttribute CreateRestaurantDto restaurantDto) {
+    public ResponseEntity<ResponseData<Restaurant>> create(@Valid @ModelAttribute CreateRestaurantDto restaurantDto,
+            @AuthenticationPrincipal CustomUserDetails userDetails) {
         ResponseData<Restaurant> dataResponse = new ResponseData<>(false, new ArrayList<>(), null);
-        try {
-            boolean isExist = restaurantService.isRestaurantExistsByName(restaurantDto.getName());
-            if (isExist) {
-                dataResponse.getMessage().add("Name of restaurant already taken");
+        if (isUserAllowedToAccessThisEndpoint(userDetails) || restaurantDto.getOwner().equals(userDetails.getId())) {
+            System.out.print(restaurantDto);
+            try {
+                boolean isExist = restaurantService.isRestaurantExistsByName(restaurantDto.getName());
+                if (isExist) {
+                    dataResponse.getMessage().add("Name of restaurant already taken");
+                    return ResponseEntity.badRequest().body(dataResponse);
+                }
+                User dataUser = userService.getUserById(restaurantDto.getOwner());
+                if (dataUser != null) {
+                    Restaurant restaurant = modelMapper.map(restaurantDto, Restaurant.class);
+
+                    restaurant.setUserOwner(dataUser);
+                    String imagePath = imageService.saveImage(restaurantDto.getPhoto(), "profile/resto");
+                    restaurant.setPhoto(imagePath);
+                    System.out.print(restaurant);
+                    dataResponse.setPayload(restaurantService.create(restaurant));
+                    dataResponse.setStatus(true);
+                    dataResponse.getMessage().add("Success create restaurant");
+                    return ResponseEntity.ok().body(dataResponse);
+                }
+                dataResponse.getMessage().add("User with Id owner not found");
+                return ResponseEntity.badRequest().body(dataResponse);
+            } catch (Exception e) {
+                dataResponse.getMessage().add(e.getMessage());
                 return ResponseEntity.badRequest().body(dataResponse);
             }
-            User dataUser = userService.getUserById(restaurantDto.getOwner());
-            if (dataUser != null) {
-                Restaurant restaurant = modelMapper.map(restaurantDto, Restaurant.class);
-                restaurant.setUserOwner(dataUser);
-                String imagePath = imageService.saveImage(restaurantDto.getPhoto(), "profile/resto");
-                restaurant.setPhoto(imagePath);
-                System.out.print(restaurant);
-                dataResponse.setPayload(restaurantService.create(restaurant));
-                dataResponse.setStatus(true);
-                dataResponse.getMessage().add("Success create restaurant");
-                return ResponseEntity.ok().body(dataResponse);
-            }
-            dataResponse.getMessage().add("User with Id owner not found");
-            return ResponseEntity.badRequest().body(dataResponse);
-        } catch (Exception e) {
-            dataResponse.getMessage().add(e.getMessage());
-            return ResponseEntity.badRequest().body(dataResponse);
         }
+        dataResponse.getMessage().add("You are not authorized to Update this restaurant");
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(dataResponse);
     }
 
     // "/customer" for role customer and super admin only
@@ -139,17 +145,28 @@ public class RestaurantController {
     // appadmin and superadmin can access for all user and resto
     @PutMapping("/update")
     public ResponseEntity<ResponseData<Restaurant>> updateRestaurant(
-            @Valid @RequestBody UpdateRestaurantDto restaurantDto,
+            @Valid @ModelAttribute UpdateRestaurantDto restaurantDto,
             @AuthenticationPrincipal CustomUserDetails userDetails) {
         ResponseData<Restaurant> dataResponse = new ResponseData<>(false, new ArrayList<>(), null);
-        if (isUserAllowedToAccessThisEndpoint(userDetails) || restaurantDto.getId().equals(userDetails.getId())) {
+        System.out.println(restaurantDto);
+        if (isUserAllowedToAccessThisEndpoint(userDetails) || restaurantDto.getOwner().equals(userDetails.getId())) {
             // need to check cause only user it self can update except his role superadmin
+            System.out.println("===========================================");
+            System.out.println(restaurantDto);
             // or appadmin
             try {
                 if (restaurantService.isRestaurantExists(restaurantDto.getId())) {
+                    Restaurant restaurantPrev = restaurantService.getRestaurantById(restaurantDto.getId());
                     Restaurant restaurant = modelMapper.map(restaurantDto, Restaurant.class);
                     User dataUser = userService.getUserById(restaurantDto.getOwner());
                     restaurant.setUserOwner(dataUser);
+                    if (!restaurantDto.getPhoto().isEmpty()) {
+                        imageService.deleteImage(restaurantPrev.getPhoto());
+                        String imagePath = imageService.saveImage(restaurantDto.getPhoto(), "profile/resto");
+                        restaurant.setPhoto(imagePath);
+                    } else {
+                        restaurant.setPhoto(restaurantPrev.getPhoto());
+                    }
                     dataResponse.setPayload(restaurantService.update(restaurant));
                     dataResponse.getMessage().add("Restaurant has been updated");
                     dataResponse.setStatus(true);
