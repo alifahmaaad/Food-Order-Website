@@ -24,4 +24,11 @@ public class ImageService {
         Files.copy(image.getInputStream(), imagePath, StandardCopyOption.REPLACE_EXISTING);
         return "uploads/" + uploadPath + "/" + uniqueFileName;
     }
+
+    public void deleteImage(String path) {
+        String filePath = System.getProperty("user.dir") + File.separator + "src/main/resources/static/"
+                + path;
+        File fileToDelete = new File(filePath);
+        fileToDelete.delete();
+    }
 }
