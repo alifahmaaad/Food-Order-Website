@@ -1,7 +1,8 @@
 package com.restoreserve.model.entities;
 
-import java.util.Date;
+import java.time.LocalDateTime;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.restoreserve.enums.ReservationEnum;
 
 import jakarta.persistence.Entity;
@@ -27,11 +28,13 @@ public class Reservation {
     private Long id;
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "userId")
+    @JsonIgnoreProperties({ "hibernateLazyInitializer", "handler" })
     private User user;
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "restaurantId")
+    @JsonIgnoreProperties({ "hibernateLazyInitializer", "handler" })
     private Restaurant restaurant;
-    private Date reservationDate;
+    private LocalDateTime reservationDate;
     private Integer numberOfGuest;
     @Enumerated(EnumType.STRING)
     private ReservationEnum statusReservation;
