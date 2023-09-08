@@ -1,7 +1,9 @@
 package com.restoreserve.dto;
+
 import org.springframework.web.multipart.MultipartFile;
 
 import jakarta.validation.constraints.NotEmpty;
+import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -10,13 +12,13 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class UpdateMenuDto {
-    @NotEmpty(message = "id is Required")
+    @NotNull(message = "id is Required")
     private Long id;
-    @NotEmpty(message = "IdRestaurant is required")
+    @NotNull(message = "IdRestaurant is required")
     private Long Restaurant;
     @NotEmpty(message = "name is required")
     private String name;
-    @NotEmpty(message = "price is required")
+    @NotNull(message = "price is required")
     private Long price;
     private String description;
     private MultipartFile photo;
