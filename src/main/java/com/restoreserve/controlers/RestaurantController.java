@@ -60,11 +60,14 @@ public class RestaurantController {
                 User dataUser = userService.getUserById(restaurantDto.getOwner());
                 if (dataUser != null) {
                     Restaurant restaurant = modelMapper.map(restaurantDto, Restaurant.class);
-
                     restaurant.setUserOwner(dataUser);
-                    String imagePath = imageService.saveImage(restaurantDto.getPhoto(), "profile/resto");
-                    restaurant.setPhoto(imagePath);
-                    System.out.print(restaurant);
+                    if (!restaurantDto.getPhoto().isEmpty()) {
+                        String imagePath = imageService.saveImage(restaurantDto.getPhoto(), "profile/resto");
+                        restaurant.setPhoto(imagePath);
+                    } else {
+                        restaurant.setPhoto("uploads/profile/resto/default.png");
+                    }
+
                     dataResponse.setPayload(restaurantService.create(restaurant));
                     dataResponse.setStatus(true);
                     dataResponse.getMessage().add("Success create restaurant");
@@ -151,8 +154,6 @@ public class RestaurantController {
         System.out.println(restaurantDto);
         if (isUserAllowedToAccessThisEndpoint(userDetails) || restaurantDto.getOwner().equals(userDetails.getId())) {
             // need to check cause only user it self can update except his role superadmin
-            System.out.println("===========================================");
-            System.out.println(restaurantDto);
             // or appadmin
             try {
                 if (restaurantService.isRestaurantExists(restaurantDto.getId())) {

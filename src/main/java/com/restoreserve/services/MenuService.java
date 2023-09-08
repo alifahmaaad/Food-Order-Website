@@ -15,22 +15,28 @@ import jakarta.transaction.Transactional;
 public class MenuService {
     @Autowired
     private MenuRepo menuRepo;
-    public Menu create(Menu menu){
+
+    public Menu create(Menu menu) {
         return menuRepo.save(menu);
     }
-    public Menu getMenuById(Long id){
+
+    public Menu getMenuById(Long id) {
         return menuRepo.findById(id).get();
     }
-    public List<Menu> getMenuByRestaurantId(Long id_restaurant){
+
+    public List<Menu> getMenuByRestaurantId(Long id_restaurant) {
         return menuRepo.findAllByRestaurantId(id_restaurant);
     }
-    public Menu update(Menu menu){
+
+    public Menu update(Menu menu) {
         return menuRepo.save(menu);
     }
-    public boolean isExist(Long id){
+
+    public boolean isExist(Long id) {
         return menuRepo.existsById(id);
     }
-    public void delete(Long id){
+
+    public void delete(Long id) {
         menuRepo.deleteById(id);
     }
 }
