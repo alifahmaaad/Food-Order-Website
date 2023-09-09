@@ -67,7 +67,8 @@ public class SecurityConfig {
                                                                 "/api/restaurant/{id}", "/api/auth/**",
                                                                 "/v3/api-docs/**", "configuration/**", "/swagger*/**",
                                                                 "/webjars/**", "/swagger-ui/**", "/secure/**",
-                                                                "/uploads/**")
+                                                                "/uploads/**", "/api/restaurant/all",
+                                                                "/api/menu/**")
                                                 .permitAll()
                                                 .requestMatchers("/api/user/appadmin/**",
                                                                 "/api/reservation/appadmin/**")
@@ -77,7 +78,8 @@ public class SecurityConfig {
                                                                 "/api/reservation/customer/**")
                                                 .hasAnyRole(RoleEnum.Customer.toString(), RoleEnum.App_Admin.toString(),
                                                                 RoleEnum.Super_Admin.toString())
-                                                .requestMatchers("/api/restaurant/**", "/api/menu/restaurant/**")
+                                                .requestMatchers("/api/restaurant/**", "/api/menu/restaurant/**",
+                                                                "/api/reservation/restaurant/**")
                                                 .hasAnyRole(RoleEnum.Restaurant_Admin.toString(),
                                                                 RoleEnum.App_Admin.toString(),
                                                                 RoleEnum.Super_Admin.toString())
