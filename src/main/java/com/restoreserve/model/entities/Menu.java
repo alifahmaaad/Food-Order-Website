@@ -1,5 +1,7 @@
 package com.restoreserve.model.entities;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
@@ -21,6 +23,7 @@ public class Menu {
     private Long id;
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "reataurantId")
+    @JsonIgnoreProperties({ "hibernateLazyInitializer", "handler" })
     private Restaurant restaurant;
     private String name;
     private Long price;

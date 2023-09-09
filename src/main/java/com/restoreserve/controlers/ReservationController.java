@@ -23,6 +23,7 @@ import com.restoreserve.dto.UpdateReservationDto;
 import com.restoreserve.enums.ReservationEnum;
 import com.restoreserve.enums.RoleEnum;
 import com.restoreserve.model.entities.Reservation;
+import com.restoreserve.model.entities.Restaurant;
 import com.restoreserve.model.entities.User;
 import com.restoreserve.security.ImplementUserDetails.CustomUserDetails;
 import com.restoreserve.services.ReservationService;
@@ -103,16 +104,17 @@ public class ReservationController {
     // Admin restaurant, only when auth iduser same with iduser(id_resto) in this
     // reservation
     @GetMapping("/restaurant/{id}")
-    public ResponseEntity<ResponseData<Reservation>> getReservationByIdRestaurant(@PathVariable Long id,
+    public ResponseEntity<ResponseData<List<Reservation>>> getReservationByIdRestaurant(@PathVariable Long id,
             @AuthenticationPrincipal CustomUserDetails userDetails) {
-        ResponseData<Reservation> dataResponse = new ResponseData<>(false, new ArrayList<>(), null);
+        ResponseData<List<Reservation>> dataResponse = new ResponseData<>(false, new ArrayList<>(), null);
 
         if (isUserAllowedToAccessThisEndpoint(userDetails) || id.equals(userDetails.getId())) {
             // need to check cause only user it self can update except his role superadmin
             // or appadmin
             try {
-                if (restaurantService.isRestaurantExists(id)) {
-                    dataResponse.setPayload(reservationService.getReservationById(id));
+                Restaurant dataRestaurant = restaurantService.getRestaurantByOwner(id);
+                if (dataRestaurant != null) {
+                    dataResponse.setPayload(reservationService.getReservationByRestaurantId(dataRestaurant.getId()));
                     dataResponse.setStatus(true);
                     dataResponse.getMessage().add("Success get all data reservation");
                     return ResponseEntity.ok(dataResponse);
@@ -131,15 +133,15 @@ public class ReservationController {
     // Customer, only when auth iduser same with iduser(id_customer) in this
     // reservation
     @GetMapping("/customer/{id}")
-    public ResponseEntity<ResponseData<Reservation>> getReservationByIdUser(@PathVariable Long id,
+    public ResponseEntity<ResponseData<List<Reservation>>> getReservationByIdUser(@PathVariable Long id,
             @AuthenticationPrincipal CustomUserDetails userDetails) {
-        ResponseData<Reservation> dataResponse = new ResponseData<>(false, new ArrayList<>(), null);
+        ResponseData<List<Reservation>> dataResponse = new ResponseData<>(false, new ArrayList<>(), null);
         if (isUserAllowedToAccessThisEndpoint(userDetails) || id.equals(userDetails.getId())) {
             // need to check cause only user it self can update except his role superadmin
             // or appadmin
             try {
                 if (userService.isUserExists(id)) {
-                    dataResponse.setPayload(reservationService.getReservationById(id));
+                    dataResponse.setPayload(reservationService.getReservationByCustomerId(id));
                     dataResponse.setStatus(true);
                     dataResponse.getMessage().add("Success get all data reservation");
                     return ResponseEntity.ok(dataResponse);
@@ -196,7 +198,7 @@ public class ReservationController {
             if (reservationService.isExistsByid(id)) {
                 Reservation reservation = reservationService.getReservationById(id);
                 if (isUserAllowedToAccessThisEndpoint(userDetails)
-                        || reservation.getRestaurant().getId().equals(userDetails.getId())) {
+                        || reservation.getRestaurant().getUserOwner().getId().equals(userDetails.getId())) {
                     // need to check cause only user it self can update except his role superadmin
                     // or appadmin
                     reservation.setStatusReservation(ReservationEnum.Approve);
@@ -227,13 +229,13 @@ public class ReservationController {
             if (reservationService.isExistsByid(id)) {
                 Reservation reservation = reservationService.getReservationById(id);
                 if (isUserAllowedToAccessThisEndpoint(userDetails)
-                        || reservation.getRestaurant().getId().equals(userDetails.getId())) {
+                        || reservation.getRestaurant().getUserOwner().getId().equals(userDetails.getId())) {
                     // need to check cause only user it self can update except his role superadmin
                     // or appadmin
                     reservation.setStatusReservation(ReservationEnum.Decline);
                     dataResponse.setPayload(reservationService.update(reservation));
                     dataResponse.setStatus(true);
-                    dataResponse.getMessage().add("Success approve reservation");
+                    dataResponse.getMessage().add("Success Decline reservation");
                     return ResponseEntity.ok(dataResponse);
                 }
                 dataResponse.getMessage().add("You are not authorized to update data reservation");

@@ -85,7 +85,7 @@ public class RestaurantController {
     }
 
     // "/customer" for role customer and super admin only
-    @GetMapping("/costumer/all")
+    @GetMapping("/all")
     public ResponseEntity<ResponseData<List<Restaurant>>> getAllRestaurant() {
         ResponseData<List<Restaurant>> dataResponse = new ResponseData<>(false, new ArrayList<>(), null);
         try {
