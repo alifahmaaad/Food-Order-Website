@@ -17,10 +17,13 @@ import com.restoreserve.dto.CreateRestaurantDto;
 import com.restoreserve.dto.ResponseData;
 import com.restoreserve.dto.UpdateRestaurantDto;
 import com.restoreserve.enums.RoleEnum;
+import com.restoreserve.model.entities.Menu;
 import com.restoreserve.model.entities.Restaurant;
 import com.restoreserve.model.entities.User;
 import com.restoreserve.security.ImplementUserDetails.CustomUserDetails;
 import com.restoreserve.services.ImageService;
+import com.restoreserve.services.MenuService;
+import com.restoreserve.services.ReservationService;
 import com.restoreserve.services.RestaurantService;
 import com.restoreserve.services.UserService;
 
@@ -38,6 +41,10 @@ public class RestaurantController {
     private RestaurantService restaurantService;
     @Autowired
     private UserService userService;
+    @Autowired
+    private ReservationService reservationService;
+    @Autowired
+    private MenuService menuService;
     @Autowired
     private ImageService imageService;
     @Autowired
@@ -162,7 +169,9 @@ public class RestaurantController {
                     User dataUser = userService.getUserById(restaurantDto.getOwner());
                     restaurant.setUserOwner(dataUser);
                     if (!restaurantDto.getPhoto().isEmpty()) {
-                        imageService.deleteImage(restaurantPrev.getPhoto());
+                        if (restaurantPrev.getPhoto() != "uploads/profile/resto/default.png") {
+                            imageService.deleteImage(restaurantPrev.getPhoto());
+                        }
                         String imagePath = imageService.saveImage(restaurantDto.getPhoto(), "profile/resto");
                         restaurant.setPhoto(imagePath);
                     } else {
@@ -195,6 +204,15 @@ public class RestaurantController {
             // or appadmin
             try {
                 if (restaurantService.isRestaurantExists(id)) {
+                    if (reservationService.isExistsByRestoid(id)) {
+                        reservationService.deleteAllByRestaurantId(id);
+                    }
+                    if (menuService.getMenuByRestaurantId(id) != null) {
+                        List<Menu> dataMenu = menuService.getMenuByRestaurantId(id);
+                        for (Menu menu : dataMenu) {
+                            menuService.delete(menu.getId());
+                        }
+                    }
                     restaurantService.deleteById(id);
                     dataResponse.getMessage().add("success delete data restaurant by id:" + id);
                     dataResponse.setStatus(true);
