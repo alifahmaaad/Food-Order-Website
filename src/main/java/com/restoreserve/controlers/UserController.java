@@ -30,9 +30,14 @@ import com.restoreserve.dto.RegisterUserDto;
 import com.restoreserve.dto.ResponseData;
 import com.restoreserve.dto.UpdateUserDto;
 import com.restoreserve.enums.RoleEnum;
+import com.restoreserve.model.entities.Menu;
+import com.restoreserve.model.entities.Restaurant;
 import com.restoreserve.model.entities.User;
 import com.restoreserve.security.ImplementUserDetails.CustomUserDetails;
 import com.restoreserve.security.ImplementUserDetails.CustomUserDetailsService;
+import com.restoreserve.services.MenuService;
+import com.restoreserve.services.ReservationService;
+import com.restoreserve.services.RestaurantService;
 import com.restoreserve.services.UserService;
 import com.restoreserve.utils.jwt.JwtUtil;
 
@@ -50,20 +55,26 @@ public class UserController {
     @Autowired
     private UserService userService;
     @Autowired
+    private MenuService menuService;
+    @Autowired
     private CustomUserDetailsService customUserDetailsService;
     @Autowired
     private AuthenticationManager authenticationManager;
-     @Autowired
+    @Autowired
     private PasswordEncoder passwordEncoder;
     @Autowired
     private JwtUtil jwtUtil;
+    @Autowired
+    private ReservationService reservationService;
+    @Autowired
+    private RestaurantService restaurantService;
+
     @PostMapping("/login")
-    public ResponseEntity<ResponseData<LoginResponse>> login(@Valid @RequestBody LoginRequest loginRequest){
+    public ResponseEntity<ResponseData<LoginResponse>> login(@Valid @RequestBody LoginRequest loginRequest) {
         ResponseData<LoginResponse> dataResponse = new ResponseData<>(false, new ArrayList<>(), null);
         try {
             authenticationManager.authenticate(
-                    new UsernamePasswordAuthenticationToken(loginRequest.getUsername(), loginRequest.getPassword())
-            );
+                    new UsernamePasswordAuthenticationToken(loginRequest.getUsername(), loginRequest.getPassword()));
         } catch (BadCredentialsException e) {
             dataResponse.getMessage().add(e.getMessage());
             dataResponse.getMessage().add("Invalid username or password");
@@ -78,18 +89,19 @@ public class UserController {
         dataResponse.getMessage().add("Login Succesfully");
         return ResponseEntity.ok(dataResponse);
     }
-    
+
     @GetMapping("/logout")
-    public ResponseEntity<?> logout(){  
+    public ResponseEntity<?> logout() {
         return ResponseEntity.ok("Logout Successfully");
     }
-    //Allrole
+
+    // Allrole
     @PostMapping("/register")
-    public ResponseEntity<ResponseData<User>> register(@Valid @RequestBody RegisterUserDto userDto,Errors errs){
+    public ResponseEntity<ResponseData<User>> register(@Valid @RequestBody RegisterUserDto userDto, Errors errs) {
         ResponseData<User> dataResponse = new ResponseData<>(false, new ArrayList<>(), null);
-        if(errs.hasErrors()){
+        if (errs.hasErrors()) {
             for (ObjectError err : errs.getAllErrors()) {
-            dataResponse.getMessage().add(err.getDefaultMessage());
+                dataResponse.getMessage().add(err.getDefaultMessage());
             }
             return ResponseEntity.badRequest().body(dataResponse);
         }
@@ -97,7 +109,7 @@ public class UserController {
         String encodedPassword = passwordEncoder.encode(dataUser.getPassword());
         dataUser.setPassword(encodedPassword);
         try {
-            if(userService.isUserExistsWithUsernameOrEmail(userDto.getUsername(), userDto.getEmail())){
+            if (userService.isUserExistsWithUsernameOrEmail(userDto.getUsername(), userDto.getEmail())) {
                 dataResponse.getMessage().add("Username or Email already taken");
                 return ResponseEntity.badRequest().body(dataResponse);
             }
@@ -110,22 +122,25 @@ public class UserController {
             return ResponseEntity.badRequest().body(dataResponse);
         }
     }
-    //UserSelfOnly
-    //SuperAdmin and appadmin can access other user
+
+    // UserSelfOnly
+    // SuperAdmin and appadmin can access other user
     @GetMapping("/{id}")
-    public ResponseEntity<ResponseData<User>> getUserById(@PathVariable Long id, @AuthenticationPrincipal CustomUserDetails userDetails){
-        ResponseData<User> dataResponse=new ResponseData<User>(false,new ArrayList<>(), null);
-        if(isUserAllowedToAccessThisEndpoint(userDetails)||id.equals(userDetails.getId())){ 
-            //need to check cause only user it self can update except his role superadmin or appadmin
+    public ResponseEntity<ResponseData<User>> getUserById(@PathVariable Long id,
+            @AuthenticationPrincipal CustomUserDetails userDetails) {
+        ResponseData<User> dataResponse = new ResponseData<User>(false, new ArrayList<>(), null);
+        if (isUserAllowedToAccessThisEndpoint(userDetails) || id.equals(userDetails.getId())) {
+            // need to check cause only user it self can update except his role superadmin
+            // or appadmin
             try {
                 boolean isExists = userService.isUserExists(id);
-                if(isExists){
+                if (isExists) {
                     dataResponse.setPayload(userService.getUserById(id));
-                    dataResponse.getMessage().add("Success get data user with id :"+id);
+                    dataResponse.getMessage().add("Success get data user with id :" + id);
                     dataResponse.setStatus(true);
                     return ResponseEntity.ok(dataResponse);
                 }
-                dataResponse.getMessage().add("Failed: Data user with id :"+id+" Not Found");
+                dataResponse.getMessage().add("Failed: Data user with id :" + id + " Not Found");
                 return ResponseEntity.badRequest().body(dataResponse);
             } catch (Exception e) {
                 dataResponse.getMessage().add(e.getMessage());
@@ -135,10 +150,11 @@ public class UserController {
         dataResponse.getMessage().add("You are not authorized to Update this User");
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(dataResponse);
     }
+
     // "/appadmin" for role app admin and super admin only
     @GetMapping("/appadmin")
-    public ResponseEntity<ResponseData<List<User>>> getAllUser(){
-        ResponseData<List<User>> dataResponse=new ResponseData<>(false, new ArrayList<>(), null);
+    public ResponseEntity<ResponseData<List<User>>> getAllUser() {
+        ResponseData<List<User>> dataResponse = new ResponseData<>(false, new ArrayList<>(), null);
         try {
             dataResponse.setPayload(userService.getAllUser());
             dataResponse.getMessage().add("Success get All data user");
@@ -148,26 +164,29 @@ public class UserController {
             dataResponse.getMessage().add(e.getMessage());
             return ResponseEntity.badRequest().body(dataResponse);
         }
-        
+
     }
-    //UserselfOnly
-    //SuperAdmin and appadmin can access other user
+
+    // UserselfOnly
+    // SuperAdmin and appadmin can access other user
     @PutMapping("/update")
-    public ResponseEntity<ResponseData<User>> updateUser(@RequestBody UpdateUserDto userDto, @AuthenticationPrincipal CustomUserDetails userDetails){
+    public ResponseEntity<ResponseData<User>> updateUser(@RequestBody UpdateUserDto userDto,
+            @AuthenticationPrincipal CustomUserDetails userDetails) {
         ResponseData<User> dataResponse = new ResponseData<>(false, new ArrayList<>(), null);
-        if(isUserAllowedToAccessThisEndpoint(userDetails)||userDto.getId().equals(userDetails.getId())){ 
-            //need to check cause only user it self can update except his role superadmin or appadmin
+        if (isUserAllowedToAccessThisEndpoint(userDetails) || userDto.getId().equals(userDetails.getId())) {
+            // need to check cause only user it self can update except his role superadmin
+            // or appadmin
             try {
-                boolean isExists=userService.isUserExists(userDto.getId());
-                if(isExists){
+                boolean isExists = userService.isUserExists(userDto.getId());
+                if (isExists) {
                     User user = modelMapper.map(userDto, User.class);
                     dataResponse.setPayload(userService.update(user));
                     dataResponse.setStatus(true);
-                    dataResponse.getMessage().add("Success Update user with id: "+user.getId());
+                    dataResponse.getMessage().add("Success Update user with id: " + user.getId());
                     return ResponseEntity.ok(dataResponse);
                 }
-            dataResponse.getMessage().add("User Not Exists id: "+userDto.getId());
-            return ResponseEntity.badRequest().body(dataResponse);  
+                dataResponse.getMessage().add("User Not Exists id: " + userDto.getId());
+                return ResponseEntity.badRequest().body(dataResponse);
             } catch (Exception e) {
                 dataResponse.getMessage().add(e.getMessage());
                 return ResponseEntity.badRequest().body(dataResponse);
@@ -176,29 +195,52 @@ public class UserController {
         dataResponse.getMessage().add("You are not authorized to Update this User");
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(dataResponse);
     }
+
     // "/appadmin" for role app admin and super admin only
     @DeleteMapping("/appadmin/delete/{id}")
-    public ResponseEntity<?> deleteUserById(@PathVariable Long id, @AuthenticationPrincipal CustomUserDetails userDetails){
-        ResponseData<?> dataResponse =new ResponseData<>(false, new ArrayList<>(), null);
+    public ResponseEntity<?> deleteUserById(@PathVariable Long id,
+            @AuthenticationPrincipal CustomUserDetails userDetails) {
+        ResponseData<?> dataResponse = new ResponseData<>(false, new ArrayList<>(), null);
         try {
             boolean isExists = userService.isUserExists(id);
-            if(isExists){
-                userService.deleteById(id);
-                dataResponse.setStatus(true);
-                dataResponse.getMessage().add("User Deleted With id:"+id);
-                return ResponseEntity.ok(dataResponse);
+            if (isExists) {
+                if (reservationService.isExistsByUserid(id)) {
+                    reservationService.deleteAllByRestaurantId(id);
+                }
+                if (restaurantService.isRestaurantExistsByOwner(id)) {
+                    Restaurant restaurant = restaurantService.getRestaurantByOwner(id);
+                    reservationService.deleteAllByRestaurantId(restaurant.getId());
+
+                    List<Menu> dataMenu = menuService.getMenuByRestaurantId(restaurant.getId());
+                    if (!dataMenu.isEmpty() || dataMenu != null) {
+                        for (Menu menu : dataMenu) {
+                            menuService.delete(menu.getId());
+                        }
+                    }
+                    restaurantService.deleteById(restaurant.getId());
+                }
+                if (!reservationService.isExistsByUserid(id) && !restaurantService.isRestaurantExistsByOwner(id)) {
+
+                    userService.deleteById(id);
+                    dataResponse.setStatus(true);
+                    dataResponse.getMessage().add("User Deleted With id:" + id);
+                    return ResponseEntity.ok(dataResponse);
+                } else {
+                    dataResponse.getMessage().add("Failed: User Not Found, id:" + id);
+                    return ResponseEntity.badRequest().body(dataResponse);
+                }
             }
-            dataResponse.getMessage().add("Failed: User Not Found, id:"+id);
+            dataResponse.getMessage().add("Failed: User Not Found, id:" + id);
             return ResponseEntity.badRequest().body(dataResponse);
         } catch (Exception e) {
             dataResponse.getMessage().add(e.getMessage());
             return ResponseEntity.badRequest().body(dataResponse);
         }
     }
+
     private boolean isUserAllowedToAccessThisEndpoint(CustomUserDetails userDetails) {
         User userData = userService.findByUsername(userDetails.getUsername());
-        return userData.getRole().equals(RoleEnum.Super_Admin)||userData.getRole().equals(RoleEnum.App_Admin);
+        return userData.getRole().equals(RoleEnum.Super_Admin) || userData.getRole().equals(RoleEnum.App_Admin);
     }
-
 
 }

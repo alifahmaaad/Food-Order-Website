@@ -128,7 +128,9 @@ public class MenuController {
                     Menu dataMenu = modelMapper.map(menuDto, Menu.class);
                     dataMenu.setRestaurant(dataRestaurant);
                     if (!menuDto.getPhoto().isEmpty()) {
-                        imageService.deleteImage(menuPrev.getPhoto());
+                        if (menuPrev.getPhoto() != "uploads/menu/default.png") {
+                            imageService.deleteImage(menuPrev.getPhoto());
+                        }
                         String imagePath = imageService.saveImage(menuDto.getPhoto(), "menu");
                         dataMenu.setPhoto(imagePath);
                     } else {

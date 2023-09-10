@@ -49,11 +49,27 @@ public class ReservationService {
         return reservationRepo.existsById(id);
     }
 
+    public boolean isExistsByUserid(Long id) {
+        return reservationRepo.existsByUserId(id);
+    }
+
+    public boolean isExistsByRestoid(Long id) {
+        return reservationRepo.existsByRestaurantId(id);
+    }
+
     public Reservation update(Reservation reservation) {
         return reservationRepo.save(reservation);
     }
 
     public void deleteById(Long Id) {
         reservationRepo.deleteById(Id);
+    }
+
+    public void deleteByIdCutomer(Long id) {
+        reservationRepo.deleteAllByUserId(id);
+    }
+
+    public void deleteAllByRestaurantId(Long id) {
+        reservationRepo.deleteAllByRestaurantId(id);
     }
 }

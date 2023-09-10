@@ -15,28 +15,40 @@ import jakarta.transaction.Transactional;
 public class RestaurantService {
     @Autowired
     private RestaurantRepo restaurantRepo;
-    public Restaurant create(Restaurant restaurant){
+
+    public Restaurant create(Restaurant restaurant) {
         return restaurantRepo.save(restaurant);
     }
-    public List<Restaurant> getAllRestaurant(){
+
+    public List<Restaurant> getAllRestaurant() {
         return restaurantRepo.findAll();
     }
-    public Restaurant getRestaurantById(Long id){
+
+    public Restaurant getRestaurantById(Long id) {
         return restaurantRepo.findById(id).get();
     }
-    public Restaurant getRestaurantByOwner(Long id){
+
+    public Restaurant getRestaurantByOwner(Long id) {
         return restaurantRepo.findByUserOwnerId(id);
     }
-    public boolean isRestaurantExists(Long id){
+
+    public boolean isRestaurantExists(Long id) {
         return restaurantRepo.existsById(id);
     }
-    public boolean isRestaurantExistsByName(String name){
+
+    public boolean isRestaurantExistsByName(String name) {
         return restaurantRepo.existsByName(name);
     }
-    public Restaurant update(Restaurant restaurant){
+
+    public boolean isRestaurantExistsByOwner(Long id) {
+        return restaurantRepo.existsByUserOwnerId(id);
+    }
+
+    public Restaurant update(Restaurant restaurant) {
         return restaurantRepo.save(restaurant);
     }
-    public void deleteById(Long id){
+
+    public void deleteById(Long id) {
         restaurantRepo.deleteById(id);
     }
 }
