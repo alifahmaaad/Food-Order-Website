@@ -179,7 +179,35 @@ public class UserController {
             try {
                 boolean isExists = userService.isUserExists(userDto.getId());
                 if (isExists) {
+                    User oldDataUser = userService.getUserById(userDto.getId());
                     User user = modelMapper.map(userDto, User.class);
+                    if (user.getPassword() == null) {
+                        user.setPassword(oldDataUser.getPassword());
+                    } else {
+                        String encodedPassword = passwordEncoder.encode(user.getPassword());
+                        user.setPassword(encodedPassword);
+                    }
+                    if (user.getRole() == null) {
+                        user.setRole(oldDataUser.getRole());
+                    } else {
+                        if (user.getRole() != oldDataUser.getRole()) {
+                            if (reservationService.isExistsByUserid(userDto.getId())) {
+                                reservationService.deleteByIdCutomer(userDto.getId());
+                            }
+                            if (restaurantService.isRestaurantExistsByOwner(userDto.getId())) {
+                                Restaurant restaurant = restaurantService.getRestaurantByOwner(userDto.getId());
+                                reservationService.deleteAllByRestaurantId(restaurant.getId());
+
+                                List<Menu> dataMenu = menuService.getMenuByRestaurantId(restaurant.getId());
+                                if (!dataMenu.isEmpty() || dataMenu != null) {
+                                    for (Menu menu : dataMenu) {
+                                        menuService.delete(menu.getId());
+                                    }
+                                }
+                                restaurantService.deleteById(restaurant.getId());
+                            }
+                        }
+                    }
                     dataResponse.setPayload(userService.update(user));
                     dataResponse.setStatus(true);
                     dataResponse.getMessage().add("Success Update user with id: " + user.getId());
@@ -205,7 +233,7 @@ public class UserController {
             boolean isExists = userService.isUserExists(id);
             if (isExists) {
                 if (reservationService.isExistsByUserid(id)) {
-                    reservationService.deleteAllByRestaurantId(id);
+                    reservationService.deleteByIdCutomer(id);
                 }
                 if (restaurantService.isRestaurantExistsByOwner(id)) {
                     Restaurant restaurant = restaurantService.getRestaurantByOwner(id);

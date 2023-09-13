@@ -19,8 +19,6 @@ public class UpdateUserDto {
     @NotEmpty(message = "Email is Required")
     @Email
     private String email;
-    @NotEmpty(message = "Password is Required")
     private String password;
-    @NotEmpty(message = "Role is Required")
     private String role;
 }
